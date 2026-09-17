@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Financiero - Adrián</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1976d2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Finanzas">
+<link rel="apple-touch-icon" href="logo.svg">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
+    background: #f5f7fa; 
+    color: #1a1a1a; 
+    padding: 16px; 
+    line-height: 1.5;
+  }
+  .container { max-width: 1300px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 4px; font-weight: 700; letter-spacing: -0.5px; }
+  .sub { color: #666; margin-bottom: 20px; font-size: 0.85rem; }
+  
+  /* Login */
+  .login-screen { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
+  .login-box { background: white; padding: 32px 24px; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); max-width: 400px; width: 100%; text-align: center; }
+  .login-box h2 { margin-bottom: 16px; font-size: 1.5rem; }
+  .login-box button { width: 100%; padding: 14px; margin: 12px 0; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-google { background: #4285f4; color: white; }
+  .btn-google:hover { background: #3367d6; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(66,133,244,0.3); }
+  .user-info { background: #e3f2fd; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .btn-logout { background: #c62828; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+  
+  /* Dashboard */
+  .dashboard { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (min-width: 768px) {
+    .dashboard { grid-template-columns: 2fr 3fr; }
+  }
+  .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .card h3 { font-size: 0.75rem; text-transform: uppercase; color: #666; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.5px; }
+  .saldo-total { font-size: 2rem; font-weight: 700; color: #2e7d32; }
+  .saldo-negativo { color: #c62828; }
+  
+  .pilares-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (min-width: 768px) {
+    .pilares-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .pilar { padding: 14px; border-radius: 12px; position: relative; transition: transform 0.2s; }
+  .pilar:hover { transform: translateY(-2px); }
+  .pilar.fijos { background: #e3f2fd; }
+  .pilar.negocio { background: #fff9c4; }
+  .pilar.ocio { background: #fff3e0; }
+  .pilar.inv { background: #e8f5e9; }
+  .pilar.emergencia { background: #f3e5f5; }
+  .pilar.ahorro { background: #fce4ec; }
+  .pilar-valor { font-size: 1.1rem; font-weight: 700; margin-top: 6px; }
+  .pilar-nombre { font-size: 0.7rem; text-transform: uppercase; color: #555; font-weight: 600; }
+  .pilar-pct { font-size: 0.8rem; color: #1976d2; font-weight: 700; margin-top: 4px; }
+  .bar { height: 6px; background: rgba(0,0,0,0.08); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; background: #1976d2; transition: width 0.3s; border-radius: 3px; }
+  
+  .metodos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+  .metodo { background: #fafafa; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .metodo-label { font-size: 0.75rem; text-transform: uppercase; color: #666; font-weight: 600; }
+  .metodo-valor { font-weight: 700; font-size: 1rem; }
+  
+  /* Formulario */
+  .form-section, .analysis-section, .history { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+  .form-section h2, .analysis-section h2, .history h2 { font-size: 1.1rem; margin-bottom: 16px; font-weight: 700; }
+  
+  .form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (min-width: 768px) {
+    .form-grid { grid-template-columns: repeat(4, 1fr); }
+    .form-grid.alt { grid-template-columns: 1fr 1fr 2fr; }
+  }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { font-size: 0.75rem; text-transform: uppercase; color: #666; margin-bottom: 6px; font-weight: 600; }
+  .form-group input, .form-group select { 
+    padding: 12px; 
+    border: 2px solid #e0e0e0; 
+    border-radius: 10px; 
+    font-size: 1rem; 
+    transition: all 0.2s;
+    -webkit-appearance: none;
+    background: white;
+  }
+  .form-group input:focus, .form-group select:focus { 
+    outline: none;
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25,118,210,0.1);
+  }
+  
+  .distribucion { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; padding: 16px; background: #f9f9f9; border-radius: 12px; }
+  @media (min-width: 768px) {
+    .distribucion { grid-template-columns: repeat(6, 1fr); }
+  }
+  .dist-item { text-align: center; }
+  .dist-item label { font-size: 0.7rem; text-transform: uppercase; color: #666; display: block; margin-bottom: 6px; font-weight: 600; }
+  .dist-item input { width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; text-align: center; font-size: 0.95rem; }
+  
+  .btn { padding: 12px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-primary { background: #1976d2; color: white; }
+  .btn-danger { background: #c62828; color: white; }
+  .btn-secondary { background: #757575; color: white; }
+  .btn-success { background: #2e7d32; color: white; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .btn:active { transform: translateY(0); }
+  .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .actions .btn { flex: 1; min-width: 120px; }
+  
+  /* Análisis */
+  .analysis-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 768px) {
+    .analysis-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .analysis-card { padding: 16px; border-radius: 12px; background: #fafafa; }
+  .analysis-card h4 { font-size: 0.8rem; text-transform: uppercase; color: #666; margin-bottom: 12px; font-weight: 600; }
+  .analysis-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 0.85rem; border-bottom: 1px solid #eee; }
+  .analysis-item:last-child { border: none; }
+  .pct { color: #1976d2; font-weight: 700; }
+  .alert { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; margin-top: 12px; font-size: 0.85rem; border-radius: 8px; }
+  .alert.danger { background: #f8d7da; border-color: #dc3545; }
+  .alert.success { background: #d4edda; border-color: #28a745; }
+  
+  /* Tabla responsive */
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 600px; }
+  th { background: #f0f0f0; padding: 12px 8px; text-align: left; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; position: sticky; top: 0; }
+  td { padding: 12px 8px; border-bottom: 1px solid #eee; }
+  .ingreso { color: #2e7d32; font-weight: 700; }
+  .gasto { color: #c62828; font-weight: 700; }
+  .btn-delete { background: none; border: none; color: #c62828; cursor: pointer; font-size: 1.2rem; padding: 8px; border-radius: 8px; transition: background 0.2s; }
+  .btn-delete:hover { background: #ffebee; }
+  
+  .sync-indicator { position: fixed; top: 20px; right: 20px; background: #2e7d32; color: white; padding: 10px 20px; border-radius: 10px; font-size: 0.85rem; opacity: 0; transition: opacity 0.3s; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .sync-indicator.show { opacity: 1; }
+  .sync-indicator.error { background: #c62828; }
+  
+  @media print {
+    body { background: white; padding: 0; }
+    .form-section, .actions, .btn-delete, .sync-indicator, .login-screen { display: none !important; }
+    .card, .history, .analysis-section { box-shadow: none; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <h2>🔐 Control Financiero</h2>
+    <p style="color:#666;margin-bottom:20px;font-size:0.9rem;">Accede para sincronizar tus datos</p>
+    <button class="btn-google" onclick="loginGoogle()">🔵 Continuar con Google</button>
+  </div>
+</div>
+
+<!-- App Principal -->
+<div id="appMain" class="container" style="display:none;">
+  <div class="user-info">
+    <span>👤 <strong id="userName"></strong> | <span id="userEmail"></span></span>
+    <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+  </div>
+
+  <h1>CONTROL FINANCIERO</h1>
+  <div class="sub">Sincronizado en la nube • Tiempo real • Multi-dispositivo</div>
+
+  <div class="dashboard">
+    <div class="card">
+      <h3>Saldo Total Disponible</h3>
+      <div id="saldoTotal" class="saldo-total">$0.00</div>
+      <div class="metodos">
+        <div class="metodo"><span class="metodo-label">💵 Efectivo</span><span id="efectivoTotal" class="metodo-valor">$0.00</span></div>
+        <div class="metodo"><span class="metodo-label">💳 Transferencia</span><span id="transferenciaTotal" class="metodo-valor">$0.00</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Capital por Pilar</h3>
+      <div class="pilares-grid">
+        <div class="pilar fijos"><div class="pilar-nombre">Gastos Fijos</div><div id="pFijos" class="pilar-valor">$0</div><div id="pFijosPct" class="pilar-pct">0%</div><div class="bar"><div id="barFijos" class="bar-fill"></div></div></div>
+        <div class="pilar negocio"><div class="pilar-nombre">Costos Stikmania</div><div id="pNegocio" class="pilar-valor">$0</div><div id="pNegocioPct" class="pilar-pct">0%</div><div class="bar"><div id="barNegocio" class="bar-fill"></div></div></div>
+        <div class="pilar ocio"><div class="pilar-nombre">Ocio</div><div id="pOcio" class="pilar-valor">$0</div><div id="pOcioPct" class="pilar-pct">0%</div><div class="bar"><div id="barOcio" class="bar-fill"></div></div></div>
+        <div class="pilar inv"><div class="pilar-nombre">Inversión</div><div id="pInv" class="pilar-valor">$0</div><div id="pInvPct" class="pilar-pct">0%</div><div class="bar"><div id="barInv" class="bar-fill"></div></div></div>
+        <div class="pilar emergencia"><div class="pilar-nombre">Fondo Emergencia</div><div id="pEmerg" class="pilar-valor">$0</div><div id="pEmergPct" class="pilar-pct">0%</div><div class="bar"><div id="barEmerg" class="bar-fill"></div></div></div>
+        <div class="pilar ahorro"><div class="pilar-nombre">Ahorro Metas</div><div id="pAhorro" class="pilar-valor">$0</div><div id="pAhorroPct" class="pilar-pct">0%</div><div class="bar"><div id="barAhorro" class="bar-fill"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h2>Registrar Movimiento</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>Tipo</label><select id="tipo"><option value="ingreso">Ingreso</option><option value="gasto">Gasto</option></select></div>
+      <div class="form-group"><label>Fuente / Pilar</label><select id="fuente"></select></div>
+      <div class="form-group"><label>Método</label><select id="metodo"><option>Efectivo</option><option>Transferencia</option></select></div>
+      <div class="form-group"><label>Monto Total</label><input type="number" id="monto" step="0.01" min="0" placeholder="0.00"></div>
+    </div>
+    <div class="form-grid alt">
+      <div class="form-group"><label>Cliente/Proyecto</label><input type="text" id="cliente" placeholder="Ej: Cliente X"></div>
+      <div class="form-group"><label>Costo Producción</label><input type="number" id="costo" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="form-group"><label>Notas</label><input type="text" id="notas" placeholder="Contexto del movimiento"></div>
+    </div>
+
+    <div class="distribucion" id="distribucion">
+      <div class="dist-item"><label>G. Fijos</label><input type="number" id="dFijos" step="0.01" min="0"></div>
+      <div class="dist-item"><label>Stikmania</label><input type="number" id="dNegocio" step="0.01" min="0"></div>
+      <div class="dist-item"><label>Ocio</label><input type="number" id="dOcio" step="0.01" min="0"></div>
+      <div class="dist-item"><label>Inversión</label><input type="number" id="dInv" step="0.01" min="0"></div>
+      <div class="dist-item"><label>Emergencia</label><input type="number" id="dEmerg" step="0.01" min="0"></div>
+      <div class="dist-item"><label>Ahorro</label><input type="number" id="dAhorro" step="0.01" min="0"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="registrar()">💾 Registrar</button>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+      <button class="btn btn-danger" onclick="resetear()">🗑️ Borrar Todo</button>
+    </div>
+  </div>
+
+  <div class="analysis-section">
+    <h2>📊 Análisis de Porcentajes</h2>
+    <div class="analysis-grid">
+      <div class="analysis-card"><h4>Fuentes de Ingreso</h4><div id="anaFuentes"></div></div>
+      <div class="analysis-card"><h4>Distribución de Ingresos</h4><div id="anaDistribucion"></div></div>
+      <div class="analysis-card"><h4>Gastos por Pilar</h4><div id="anaGastos"></div></div>
+    </div>
+    <div id="alertas"></div>
+    <div class="analysis-card" style="margin-top:16px;">
+      <h4>💼 Rentabilidad Stikmania</h4>
+      <div id="anaStikmania"></div>
+    </div>
+  </div>
+
+  <div class="history">
+    <h2>Historial de Movimientos</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>Fecha</th><th>Tipo</th><th>Fuente/Pilar</th><th>Cliente</th><th>Método</th><th>Monto</th><th>Notas</th><th></th></tr></thead>
+        <tbody id="historial"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="syncIndicator" class="sync-indicator">✓ Sincronizado</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+// 🔥 CONFIGURACIÓN FIREBASE (REEMPLAZA CON TUS DATOS)
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  projectId: "TU_PROYECTO_ID",
+  storageBucket: "TU_PROYECTO.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let movs = [];
+let unsubMovs = null;
+
+const FUENTES_ING = ['Propina', 'Stikmania', 'Salario'];
+const PILARES = ['Gastos Fijos', 'Costos Stikmania', 'Ocio', 'Inversión', 'Fondo Emergencia', 'Ahorro Metas'];
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appMain').style.display = 'block';
+    document.getElementById('userName').textContent = user.displayName || 'Usuario';
+    document.getElementById('userEmail').textContent = user.email;
+    subscribeToMovimientos();
+  } else {
+    currentUser = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appMain').style.display = 'none';
+    if (unsubMovs) unsubMovs();
+  }
+});
+
+async function loginGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await auth.signInWithPopup(provider);
+  } catch (e) {
+    alert('Error al iniciar sesión: ' + e.message);
+  }
+}
+
+function logout() {
+  auth.signOut();
+}
+
+function subscribeToMovimientos() {
+  if (unsubMovs) unsubMovs();
+  unsubMovs = db.collection('users').doc(currentUser.uid).collection('movimientos')
+    .orderBy('fecha', 'desc')
+    .onSnapshot(snapshot => {
+      movs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      render();
+      showSync('✓ Sincronizado');
+    }, error => {
+      showSync('Error: ' + error.message, true);
+    });
+}
+
+function showSync(msg, isError = false) {
+  const ind = document.getElementById('syncIndicator');
+  ind.textContent = msg;
+  ind.className = 'sync-indicator show' + (isError ? ' error' : '');
+  setTimeout(() => ind.classList.remove('show'), 2000);
+}
+
+document.getElementById('tipo').addEventListener('change', actualizarForm);
+document.getElementById('monto').addEventListener('input', calcDist);
+
+function actualizarForm() {
+  const tipo = document.getElementById('tipo').value;
+  const fuente = document.getElementById('fuente');
+  const dist = document.getElementById('distribucion');
+  if (tipo === 'ingreso') {
+    fuente.innerHTML = FUENTES_ING.map(f => `<option>${f}</option>`).join('');
+    dist.style.display = 'grid';
+  } else {
+    fuente.innerHTML = PILARES.map(p => `<option>${p}</option>`).join('');
+    dist.style.display = 'none';
+  }
+}
+
+function calcDist() {
+  const m = parseFloat(document.getElementById('monto').value) || 0;
+  document.getElementById('dFijos').value = (m * 0.40).toFixed(2);
+  document.getElementById('dNegocio').value = (m * 0.10).toFixed(2);
+  document.getElementById('dOcio').value = (m * 0.15).toFixed(2);
+  document.getElementById('dInv').value = (m * 0.15).toFixed(2);
+  document.getElementById('dEmerg').value = (m * 0.10).toFixed(2);
+  document.getElementById('dAhorro').value = (m * 0.10).toFixed(2);
+}
+
+async function registrar() {
+  if (!currentUser) return alert('Inicia sesión primero');
+  
+  const tipo = document.getElementById('tipo').value;
+  const fuente = document.getElementById('fuente').value;
+  const metodo = document.getElementById('metodo').value;
+  const monto = parseFloat(document.getElementById('monto').value);
+  const cliente = document.getElementById('cliente').value;
+  const costo = parseFloat(document.getElementById('costo').value) || 0;
+  const notas = document.getElementById('notas').value;
+  
+  if (!monto || monto <= 0) return alert('Monto inválido');
+
+  const mov = {
+    fecha: new Date().toISOString(),
+    tipo, fuente, metodo, monto, cliente, costo, notas,
+    dist: tipo === 'ingreso' ? {
+      fijos: parseFloat(document.getElementById('dFijos').value) || 0,
+      negocio: parseFloat(document.getElementById('dNegocio').value) || 0,
+      ocio: parseFloat(document.getElementById('dOcio').value) || 0,
+      inv: parseFloat(document.getElementById('dInv').value) || 0,
+      emerg: parseFloat(document.getElementById('dEmerg').value) || 0,
+      ahorro: parseFloat(document.getElementById('dAhorro').value) || 0
+    } : null
+  };
+
+  if (tipo === 'ingreso') {
+    const suma = Object.values(mov.dist).reduce((a,b) => a+b, 0);
+    if (Math.abs(suma - monto) > 0.01) {
+      if (!confirm(`Distribución ($${suma.toFixed(2)}) ≠ Monto ($${monto.toFixed(2)}). ¿Continuar?`)) return;
+    }
+  }
+
+  try {
+    await db.collection('users').doc(currentUser.uid).collection('movimientos').add(mov);
+    ['monto','cliente','costo','notas','dFijos','dNegocio','dOcio','dInv','dEmerg','dAhorro'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    showSync('✓ Guardado en la nube');
+  } catch (e) {
+    alert('Error al guardar: ' + e.message);
+  }
+}
+
+async function eliminar(id) {
+  if (!confirm('¿Eliminar?')) return;
+  try {
+    await db.collection('users').doc(currentUser.uid).collection('movimientos').doc(id).delete();
+    showSync('✓ Eliminado');
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function resetear() {
+  if (!confirm('¿Borrar TODO? Esta acción no se puede deshacer.')) return;
+  try {
+    const batch = db.batch();
+    const snapshot = await db.collection('users').doc(currentUser.uid).collection('movimientos').get();
+    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    showSync('✓ Todo borrado');
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function calc() {
+  let t=0, ef=0, tr=0;
+  let fijos=0, negocio=0, ocio=0, inv=0, emerg=0, ahorro=0;
+  let ingProp=0, ingStik=0, ingSal=0;
+  let distFijos=0, distNeg=0, distOcio=0, distInv=0, distEmerg=0, distAhorro=0;
+  let gasFijos=0, gasNeg=0, gasOcio=0, gasInv=0, gasEmerg=0, gasAhorro=0;
+  let stikIng=0, stikCosto=0;
+  let totalIng=0, totalGas=0;
+
+  movs.forEach(m => {
+    if (m.tipo === 'ingreso') {
+      t += m.monto; totalIng += m.monto;
+      m.metodo === 'Efectivo' ? ef += m.monto : tr += m.monto;
+      if (m.fuente === 'Propina') ingProp += m.monto;
+      if (m.fuente === 'Stikmania') { ingStik += m.monto; stikIng += m.monto; stikCosto += m.costo || 0; }
+      if (m.fuente === 'Salario') ingSal += m.monto;
+      if (m.dist) {
+        distFijos += m.dist.fijos; distNeg += m.dist.negocio; distOcio += m.dist.ocio;
+        distInv += m.dist.inv; distEmerg += m.dist.emerg; distAhorro += m.dist.ahorro;
+      }
+    } else {
+      t -= m.monto; totalGas += m.monto;
+      m.metodo === 'Efectivo' ? ef -= m.monto : tr -= m.monto;
+      if (m.fuente === 'Gastos Fijos') { fijos -= m.monto; gasFijos += m.monto; }
+      if (m.fuente === 'Costos Stikmania') { negocio -= m.monto; gasNeg += m.monto; }
+      if (m.fuente === 'Ocio') { ocio -= m.monto; gasOcio += m.monto; }
+      if (m.fuente === 'Inversión') { inv -= m.monto; gasInv += m.monto; }
+      if (m.fuente === 'Fondo Emergencia') { emerg -= m.monto; gasEmerg += m.monto; }
+      if (m.fuente === 'Ahorro Metas') { ahorro -= m.monto; gasAhorro += m.monto; }
+    }
+  });
+
+  return { t, ef, tr, fijos, negocio, ocio, inv, emerg, ahorro, ingProp, ingStik, ingSal, distFijos, distNeg, distOcio, distInv, distEmerg, distAhorro, gasFijos, gasNeg, gasOcio, gasInv, gasEmerg, gasAhorro, stikIng, stikCosto, totalIng, totalGas };
+}
+
+function pct(v, total) { return total > 0 ? ((v/total)*100).toFixed(1) : '0.0'; }
+function fmt(n) { return '$' + n.toFixed(2); }
+
+function render() {
+  const s = calc();
+  
+  document.getElementById('saldoTotal').textContent = fmt(s.t);
+  document.getElementById('saldoTotal').className = 'saldo-total' + (s.t < 0 ? ' saldo-negativo' : '');
+  document.getElementById('efectivoTotal').textContent = fmt(s.ef);
+  document.getElementById('transferenciaTotal').textContent = fmt(s.tr);
+
+  const capitalTotal = Math.max(s.fijos + s.negocio + s.ocio + s.inv + s.emerg + s.ahorro, 0);
+  const pilares = [
+    ['Fijos', s.fijos, 'barFijos', 'pFijosPct'],
+    ['Negocio', s.negocio, 'barNegocio', 'pNegocioPct'],
+    ['Ocio', s.ocio, 'barOcio', 'pOcioPct'],
+    ['Inv', s.inv, 'barInv', 'pInvPct'],
+    ['Emerg', s.emerg, 'barEmerg', 'pEmergPct'],
+    ['Ahorro', s.ahorro, 'barAhorro', 'pAhorroPct']
+  ];
+  pilares.forEach(([k, v, barId, pctId]) => {
+    document.getElementById('p' + k).textContent = fmt(v);
+    const p = capitalTotal > 0 ? (v / capitalTotal) * 100 : 0;
+    document.getElementById(pctId).textContent = p.toFixed(1) + '%';
+    document.getElementById(barId).style.width = Math.max(0, Math.min(100, p)) + '%';
+  });
+
+  document.getElementById('anaFuentes').innerHTML = [
+    ['Propina', s.ingProp], ['Stikmania', s.ingStik], ['Salario', s.ingSal]
+  ].map(([n,v]) => `<div class="analysis-item"><span>${n}</span><span class="pct">${pct(v, s.totalIng)}% (${fmt(v)})</span></div>`).join('');
+
+  document.getElementById('anaDistribucion').innerHTML = [
+    ['G. Fijos', s.distFijos], ['Stikmania', s.distNeg], ['Ocio', s.distOcio],
+    ['Inversión', s.distInv], ['Emergencia', s.distEmerg], ['Ahorro', s.distAhorro]
+  ].map(([n,v]) => `<div class="analysis-item"><span>${n}</span><span class="pct">${pct(v, s.totalIng)}%</span></div>`).join('');
+
+  document.getElementById('anaGastos').innerHTML = [
+    ['G. Fijos', s.gasFijos], ['Stikmania', s.gasNeg], ['Ocio', s.gasOcio],
+    ['Inversión', s.gasInv], ['Emergencia', s.gasEmerg], ['Ahorro', s.gasAhorro]
+  ].map(([n,v]) => `<div class="analysis-item"><span>${n}</span><span class="pct">${pct(v, s.totalGas)}% (${fmt(v)})</span></div>`).join('');
+
+  const ganancia = s.stikIng - s.stikCosto;
+  const margen = s.stikIng > 0 ? (ganancia / s.stikIng) * 100 : 0;
+  document.getElementById('anaStikmania').innerHTML = `
+    <div class="analysis-item"><span>Ingresos Stikmania</span><span>${fmt(s.stikIng)}</span></div>
+    <div class="analysis-item"><span>Costos producción</span><span style="color:#c62828">${fmt(s.stikCosto)}</span></div>
+    <div class="analysis-item"><span><b>Ganancia neta</b></span><span style="color:${ganancia>=0?'#2e7d32':'#c62828'}"><b>${fmt(ganancia)}</b></span></div>
+    <div class="analysis-item"><span>Margen real</span><span class="pct">${margen.toFixed(1)}%</span></div>
+  `;
+
+  let alerts = [];
+  if (s.totalGas > 0) {
+    const pctOcio = (s.gasOcio / s.totalGas) * 100;
+    if (pctOcio > 25) alerts.push({t:'danger', m:`⚠️ Ocio representa ${pctOcio.toFixed(1)}% de tus gastos (recomendado: <20%)`});
+  }
+  if (s.emerg < 0) alerts.push({t:'danger', m:'🚨 Fondo de emergencia en negativo.'});
+  if (s.stikIng > 0 && margen < 30) alerts.push({t:'', m:`💼 Margen Stikmania (${margen.toFixed(1)}%) es bajo.`});
+  
+  document.getElementById('alertas').innerHTML = alerts.map(a => `<div class="alert ${a.t}">${a.m}</div>`).join('');
+
+  document.getElementById('historial').innerHTML = movs.map(m => `
+    <tr>
+      <td>${new Date(m.fecha).toLocaleString('es-ES')}</td>
+      <td>${m.tipo === 'ingreso' ? '📈' : '📉'} ${m.tipo}</td>
+      <td>${m.fuente}</td>
+      <td>${m.cliente || '-'}</td>
+      <td>${m.metodo}</td>
+      <td class="${m.tipo}">${m.tipo === 'ingreso' ? '+' : '-'}${fmt(m.monto)}</td>
+      <td style="font-size:0.75rem;color:#666">${m.notas || ''}${m.costo ? ' | Costo: '+fmt(m.costo) : ''}</td>
+      <td><button class="btn-delete" onclick="eliminar('${m.id}')">🗑️</button></td>
+    </tr>
+  `).join('');
+}
+
+actualizarForm();
+</script>
+
+<!-- Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('SW registrado'))
+      .catch(err => console.log('SW error:', err));
+  }
+</script>
+
+</body>
+</html>
