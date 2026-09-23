@@ -4,1016 +4,1196 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Control Financiero - Adrián</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1976d2">
+<link rel="apple-touch-icon" href="logo.svg">
 <style>
-  :root {
-    --bg: #0b0f19; --surface: #151b2b; --border: #262d42;
-    --text: #f8fafc; --muted: #8b94a7;
-    --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --warn: #f59e0b;
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+    background: #f5f7fa; 
+    color: #1a1a1a; 
+    line-height: 1.5;
+    padding-bottom: 80px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-  body { background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: hidden; padding-bottom: 70px; }
-
-  .app { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; }
-  .header { padding: 1.5rem 1rem 1rem; text-align: center; }
-  .header h1 { font-size: 1.1rem; color: var(--muted); font-weight: 500; }
-  .balance { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin: 0.5rem 0; }
-  .accounts { display: flex; justify-content: center; gap: 1.5rem; font-size: 0.85rem; color: var(--muted); }
-
-  .tabs { display: flex; overflow-x: auto; padding: 0 1rem; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
-  .tab { padding: 0.75rem 0; font-size: 0.9rem; color: var(--muted); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; font-weight: 600; }
-  .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
-
-  .view { display: none; padding: 0 1rem; animation: fadeIn 0.3s; }
-  .view.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; }
-  .card-title { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; font-weight: 600; }
-
-  .budget-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-  .budget-info { flex: 1; }
-  .budget-name { font-weight: 600; font-size: 0.95rem; }
-  .budget-nums { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
-  .progress { height: 6px; background: var(--border); border-radius: 3px; margin-top: 6px; overflow: hidden; }
-  .progress-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
-
-  .tx-item { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 0; border-bottom: 1px solid var(--border); }
-  .tx-item:last-child { border-bottom: none; }
-  .tx-left { display: flex; align-items: center; gap: 0.75rem; }
-  .tx-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-  .tx-icon.inc { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-  .tx-icon.exp { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
-  .tx-icon.pending { background: rgba(245, 158, 11, 0.15); color: var(--warn); }
-  .tx-cat { font-weight: 600; font-size: 0.95rem; }
-  .tx-date { font-size: 0.8rem; color: var(--muted); }
-  .tx-amount { font-weight: 700; font-size: 1rem; }
-  .tx-amount.inc { color: var(--success); }
-  .tx-amount.exp { color: var(--danger); }
-
-  .fab { position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border: none; border-radius: 50%; font-size: 1.5rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; }
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 0.75rem 0; z-index: 100; max-width: 600px; margin: 0 auto; }
-  .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; color: var(--muted); cursor: pointer; gap: 4px; }
-  .nav-item.active { color: var(--primary); }
-  .nav-item svg { width: 24px; height: 24px; }
-
-  .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: flex-end; justify-content: center; }
-  .modal.active { display: flex; }
-  .modal-content { background: var(--surface); width: 100%; max-width: 600px; border-radius: 24px 24px 0 0; padding: 1.5rem; animation: slideUp 0.3s; max-height: 90vh; overflow-y: auto; }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-  .modal-header h2 { font-size: 1.2rem; }
-  .close-btn { background: none; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; }
-
-  .form-group { margin-bottom: 1rem; }
-  .form-group label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem; font-weight: 500; }
-  .form-control { width: 100%; padding: 0.8rem; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 10px; font-size: 1rem; }
-  .form-control:focus { outline: none; border-color: var(--primary); }
-  .seg-control { display: flex; background: var(--bg); border-radius: 10px; padding: 4px; gap: 4px; }
-  .seg-btn { flex: 1; padding: 0.6rem; text-align: center; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--muted); transition: 0.2s; }
-  .seg-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-  .btn-full { width: 100%; padding: 1rem; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 0.75rem; }
-  .btn-primary { background: var(--primary); color: white; }
-  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  button:disabled { opacity: 0.45; cursor: not-allowed; }
-
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-  .stat-box { text-align: center; }
-  .stat-val { font-size: 1.5rem; font-weight: 800; }
-  .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
-
-  .alert-badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; }
-  .alert-overdue { background: var(--danger); color: white; }
-  .alert-soon { background: var(--warn); color: white; }
-
-  .sync-status { text-align: center; padding: 0.5rem; font-size: 0.75rem; color: var(--muted); }
-  .sync-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.25rem; }
-  .sync-dot.local { background: var(--success); }
-
-  .business-note, .preview-note {
-    font-size: .8rem;
-    padding: .75rem;
+  
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+    padding: 20px 16px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .header-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .sync-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(255,255,255,0.2);
+  }
+  .sync-badge.online { background: rgba(76, 175, 80, 0.3); }
+  .sync-badge.offline { background: rgba(244, 67, 54, 0.3); }
+  .saldo-display {
+    text-align: center;
+  }
+  .saldo-label {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    margin-bottom: 4px;
+  }
+  .saldo-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+  .saldo-methods {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+  }
+  .saldo-method {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  /* Navigation */
+  .nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    color: #666;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .nav-item.active {
+    color: #1976d2;
+  }
+  .nav-item.active .nav-icon {
+    background: #e3f2fd;
+  }
+  .nav-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    transition: all 0.2s;
+  }
+  
+  /* Screens */
+  .screen {
+    display: none;
+    padding: 16px;
+    animation: fadeIn 0.3s;
+  }
+  .screen.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Cards */
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .card-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  /* Pilares Grid */
+  .pilares-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .pilar-card {
+    padding: 16px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .pilar-card.fijos { background: #e3f2fd; }
+  .pilar-card.ocio { background: #fff3e0; }
+  .pilar-card.inversion { background: #e8f5e9; }
+  .pilar-card.ahorro { background: #fce4ec; }
+  .pilar-nombre {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 8px;
+  }
+  .pilar-valor {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .pilar-pct {
+    font-size: 0.8rem;
+    color: #1976d2;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .pilar-bar {
+    height: 4px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 2px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .pilar-bar-fill {
+    height: 100%;
+    background: #1976d2;
+    transition: width 0.3s;
+  }
+  
+  /* Timeline */
+  .timeline {
+    position: relative;
+  }
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .timeline-item:last-child {
+    border-bottom: none;
+  }
+  .timeline-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .timeline-icon.ingreso { background: #e8f5e9; }
+  .timeline-icon.gasto { background: #ffebee; }
+  .timeline-content {
+    flex: 1;
+  }
+  .timeline-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .timeline-meta {
+    font-size: 0.75rem;
+    color: #666;
+  }
+  .timeline-amount {
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: right;
+  }
+  .timeline-amount.ingreso { color: #2e7d32; }
+  .timeline-amount.gasto { color: #c62828; }
+  
+  /* Ciclo Propinas */
+  .ciclo-propinas {
+    background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .ciclo-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ciclo-progress {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .ciclo-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .ciclo-dot.active {
+    background: #f57f17;
+    color: white;
+  }
+  .ciclo-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .ciclo-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ciclo-btn.primary {
+    background: #f57f17;
+    color: white;
+  }
+  .ciclo-btn.secondary {
+    background: rgba(0,0,0,0.1);
+    color: #1a1a1a;
+  }
+  
+  /* Stikmania */
+  .stikmania-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stik-stat {
+    background: #f5f5f5;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+  }
+  .stik-stat-label {
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  .stik-stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  .stik-stat-value.positive { color: #2e7d32; }
+  .stik-stat-value.negative { color: #c62828; }
+  
+  /* Pendientes */
+  .pendiente-item {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 4px solid #ffc107;
+  }
+  .pendiente-item.vencido {
+    border-left-color: #c62828;
+  }
+  .pendiente-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 8px;
+  }
+  .pendiente-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .pendiente-amount {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1976d2;
+  }
+  .pendiente-meta {
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 12px;
+  }
+  .pendiente-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .pendiente-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .pendiente-btn.mark-paid {
+    background: #2e7d32;
+    color: white;
+  }
+  .pendiente-btn.delete {
+    background: #ffebee;
+    color: #c62828;
+  }
+  
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #1976d2;
+    color: white;
+    border: none;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(25,118,210,0.4);
+    cursor: pointer;
+    z-index: 99;
+    transition: all 0.2s;
+  }
+  .fab:active {
+    transform: scale(0.95);
+  }
+  
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal.active {
+    display: flex;
+  }
+  .modal-content {
+    background: white;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    animation: slideUp 0.3s;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .modal-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #f5f5f5;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  
+  /* Form */
+  .form-group {
+    margin-bottom: 16px;
+  }
+  .form-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .form-input, .form-select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
     border-radius: 10px;
-    margin-bottom: 1rem;
+    font-size: 1rem;
+    transition: all 0.2s;
   }
-  .business-note { color: var(--warn); background: rgba(245,158,11,.1); }
-  .preview-note { color: var(--muted); background: var(--bg); border: 1px dashed var(--border); }
-
-  .hidden { display: none !important; }
+  .form-input:focus, .form-select:focus {
+    outline: none;
+    border-color: #1976d2;
+  }
+  
+  .tipo-selector {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .tipo-btn {
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tipo-btn.active {
+    border-color: #1976d2;
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+  
+  .metodo-selector {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .metodo-btn {
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .metodo-btn.active {
+    border-color: #1976d2;
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+  
+  /* Preview */
+  .preview-impact {
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+  .preview-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .preview-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .preview-item:last-child {
+    border-bottom: none;
+  }
+  .preview-label {
+    font-size: 0.85rem;
+  }
+  .preview-value {
+    font-weight: 700;
+    color: #1976d2;
+  }
+  
+  .btn-save {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: #1976d2;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: all 0.2s;
+  }
+  .btn-save:active {
+    transform: scale(0.98);
+  }
+  
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+  }
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+  }
+  .empty-text {
+    font-size: 0.9rem;
+  }
+  
+  /* Responsive */
+  @media (min-width: 768px) {
+    .pilares-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stikmania-stats {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <div class="header">
-    <h1>Saldo Total</h1>
-    <div class="balance" id="totalBal">$0.00</div>
-    <div class="accounts">
-      <span>💵 <span id="cashBal">$0.00</span></span>
-      <span>💳 <span id="bankBal">$0.00</span></span>
-    </div>
-    <div class="sync-status">
-      <span class="sync-dot local"></span> Datos guardados localmente
-    </div>
+<!-- Header -->
+<div class="header">
+  <div class="header-top">
+    <div class="header-title">💰 Control Financiero</div>
+    <div id="syncBadge" class="sync-badge offline">Offline</div>
   </div>
-
-  <div class="tabs">
-    <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Base Cero</div>
-    <div class="tab" data-tab="pillars" onclick="switchTab('pillars')">Pilares</div>
-    <div class="tab" data-tab="stikmania" onclick="switchTab('stikmania')">Stikmania</div>
-    <div class="tab" data-tab="pending" onclick="switchTab('pending')">Pendientes</div>
-    <div class="tab" data-tab="history" onclick="switchTab('history')">Historial</div>
-  </div>
-
-  <!-- BASE CERO -->
-  <div id="dashboard" class="view active">
-    <div class="card">
-      <div class="card-title">Asignación Automática del Mes</div>
-      <div class="grid-3">
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem; color:var(--success)" id="monthIncome">$0.00</div>
-          <div class="stat-label">Ingresos Pagados</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem; color:var(--primary)" id="monthAllocated">$0.00</div>
-          <div class="stat-label">Asignado</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem; color:var(--warn)" id="unassigned">$0.00</div>
-          <div class="stat-label">Sin Asignar</div>
-        </div>
-      </div>
-      <div style="margin-top:0.75rem; font-size:0.8rem; color:var(--muted);">
-        Regla: Salario 50% Fijos / 30% Ocio / 20% Ahorro · Stikmania 50% Inversión / 30% Fijos / 20% Ahorro · Otro 100% Ahorro.
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Ciclo de Propinas</div>
-      <div style="font-size:0.85rem; color:var(--muted); margin-bottom:0.75rem;">
-        Registra 3 propinas y cierra el ciclo.<br>
-        Mayor → Fijos · Intermedia → Ocio · Menor → Inversión.
-      </div>
-
-      <div class="budget-row">
-        <div class="budget-info">
-          <div class="budget-name">Propinas en ciclo</div>
-          <div class="budget-nums" id="propinaCount">0/3</div>
-        </div>
-      </div>
-
-      <div id="propinaList"></div>
-
-      <div class="grid-2">
-        <button class="btn-full btn-primary" id="btnClosePropina" onclick="closePropinaCycle()" disabled>Cerrar ciclo</button>
-        <button class="btn-full btn-outline" onclick="resetPropinaCycle()">Borrar ciclo</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Respaldo</div>
-      <button class="btn-full btn-outline" onclick="generateSyncLink()">🔗 Generar enlace de sincronización</button>
-      <button class="btn-full btn-outline" onclick="exportData()">📤 Exportar JSON</button>
-      <label class="btn-full btn-outline" style="display:block; text-align:center; cursor:pointer;">
-        📥 Importar JSON
-        <input type="file" accept=".json" onchange="importData(event)" style="display:none;">
-      </label>
-    </div>
-  </div>
-
-  <!-- PILARES -->
-  <div id="pillars" class="view">
-    <div id="pillarsList"></div>
-    <button class="btn-full btn-outline" onclick="openSettings()">⚙️ Configurar límites y moneda</button>
-  </div>
-
-  <!-- STIKMANIA -->
-  <div id="stikmania" class="view">
-    <div class="card">
-      <div class="card-title">Stikmania: Este Mes</div>
-      <div class="grid-3">
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem; color:var(--success)" id="stikIncMonth">$0.00</div>
-          <div class="stat-label">Ingresos</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem; color:var(--danger)" id="stikExpMonth">$0.00</div>
-          <div class="stat-label">Gastos</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem;" id="stikNetMonth">$0.00</div>
-          <div class="stat-label">Neto</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Stikmania: Histórico</div>
-      <div class="grid-3">
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem; color:var(--success)" id="stikIncAll">$0.00</div>
-          <div class="stat-label">Ingresos</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem; color:var(--danger)" id="stikExpAll">$0.00</div>
-          <div class="stat-label">Gastos</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val" style="font-size:1.1rem;" id="stikNetAll">$0.00</div>
-          <div class="stat-label">Neto</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="padding: 0.5rem 1rem;">
-      <div id="stikList"></div>
-    </div>
-  </div>
-
-  <!-- PENDIENTES -->
-  <div id="pending" class="view">
-    <div class="card">
-      <div class="card-title">Cuentas por Cobrar</div>
-      <div class="stat-val" style="color:var(--warn); font-size:1.5rem;" id="totalCxc">$0.00</div>
-      <div id="cxcList" style="margin-top:1rem;"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Cuentas por Pagar</div>
-      <div class="stat-val" style="color:var(--danger); font-size:1.5rem;" id="totalCxp">$0.00</div>
-      <div id="cxpList" style="margin-top:1rem;"></div>
-    </div>
-  </div>
-
-  <!-- HISTORIAL -->
-  <div id="history" class="view">
-    <div class="card" style="padding: 0.5rem 1rem;">
-      <div id="historyList"></div>
+  <div class="saldo-display">
+    <div class="saldo-label">Saldo Total Disponible</div>
+    <div id="saldoTotal" class="saldo-amount">$0.00</div>
+    <div class="saldo-methods">
+      <div class="saldo-method">💵 <span id="efectivoTotal">$0.00</span></div>
+      <div class="saldo-method">💳 <span id="transferenciaTotal">$0.00</span></div>
     </div>
   </div>
 </div>
 
-<button class="fab" onclick="openTxModal()">+</button>
+<!-- Screen: Inicio -->
+<div id="screenInicio" class="screen active">
+  <!-- Ciclo Propinas -->
+  <div class="ciclo-propinas">
+    <div class="ciclo-title">💵 Ciclo de Propinas</div>
+    <div class="ciclo-progress">
+      <div class="ciclo-dot" id="cicloDot1">1</div>
+      <div class="ciclo-dot" id="cicloDot2">2</div>
+      <div class="ciclo-dot" id="cicloDot3">3</div>
+    </div>
+    <div class="ciclo-actions">
+      <button class="ciclo-btn primary" onclick="registrarPropina()">+ Propina</button>
+      <button class="ciclo-btn secondary" onclick="cerrarCiclo()">Cerrar Ciclo</button>
+    </div>
+  </div>
 
-<div class="bottom-nav">
-  <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-    Inicio
+  <!-- Pilares -->
+  <div class="card">
+    <div class="card-title">📊 Mis Pilares</div>
+    <div class="pilares-grid">
+      <div class="pilar-card fijos">
+        <div class="pilar-nombre">Gastos Fijos</div>
+        <div id="pFijos" class="pilar-valor">$0</div>
+        <div id="pFijosPct" class="pilar-pct">0%</div>
+        <div class="pilar-bar"><div id="barFijos" class="pilar-bar-fill"></div></div>
+      </div>
+      <div class="pilar-card ocio">
+        <div class="pilar-nombre">Ocio</div>
+        <div id="pOcio" class="pilar-valor">$0</div>
+        <div id="pOcioPct" class="pilar-pct">0%</div>
+        <div class="pilar-bar"><div id="barOcio" class="pilar-bar-fill"></div></div>
+      </div>
+      <div class="pilar-card inversion">
+        <div class="pilar-nombre">Inversión</div>
+        <div id="pInv" class="pilar-valor">$0</div>
+        <div id="pInvPct" class="pilar-pct">0%</div>
+        <div class="pilar-bar"><div id="barInv" class="pilar-bar-fill"></div></div>
+      </div>
+      <div class="pilar-card ahorro">
+        <div class="pilar-nombre">Ahorro</div>
+        <div id="pAhorro" class="pilar-valor">$0</div>
+        <div id="pAhorroPct" class="pilar-pct">0%</div>
+        <div class="pilar-bar"><div id="barAhorro" class="pilar-bar-fill"></div></div>
+      </div>
+    </div>
   </div>
-  <div class="nav-item" data-tab="pillars" onclick="switchTab('pillars')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-    Pilares
-  </div>
-  <div class="nav-item" data-tab="stikmania" onclick="switchTab('stikmania')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-    Negocio
-  </div>
-  <div class="nav-item" data-tab="pending" onclick="switchTab('pending')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    Pendientes
-  </div>
-  <div class="nav-item" data-tab="history" onclick="switchTab('history')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Historial
+
+  <!-- Movimientos Recientes -->
+  <div class="card">
+    <div class="card-title">🕐 Movimientos Recientes</div>
+    <div id="timelineReciente" class="timeline"></div>
   </div>
 </div>
 
-<!-- MODAL MOVIMIENTO -->
-<div class="modal" id="txModal">
+<!-- Screen: Pilares -->
+<div id="screenPilares" class="screen">
+  <div class="card">
+    <div class="card-title">📊 Detalle de Pilares</div>
+    <div class="pilares-grid">
+      <div class="pilar-card fijos">
+        <div class="pilar-nombre">Gastos Fijos</div>
+        <div id="pFijos2" class="pilar-valor">$0</div>
+        <div id="pFijosPct2" class="pilar-pct">0%</div>
+      </div>
+      <div class="pilar-card ocio">
+        <div class="pilar-nombre">Ocio</div>
+        <div id="pOcio2" class="pilar-valor">$0</div>
+        <div id="pOcioPct2" class="pilar-pct">0%</div>
+      </div>
+      <div class="pilar-card inversion">
+        <div class="pilar-nombre">Inversión</div>
+        <div id="pInv2" class="pilar-valor">$0</div>
+        <div id="pInvPct2" class="pilar-pct">0%</div>
+      </div>
+      <div class="pilar-card ahorro">
+        <div class="pilar-nombre">Ahorro</div>
+        <div id="pAhorro2" class="pilar-valor">$0</div>
+        <div id="pAhorroPct2" class="pilar-pct">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📜 Historial por Pilar</div>
+    <div id="historialPilares" class="timeline"></div>
+  </div>
+</div>
+
+<!-- Screen: Negocio -->
+<div id="screenNegocio" class="screen">
+  <div class="card">
+    <div class="card-title">💼 Stikmania - Este Mes</div>
+    <div class="stikmania-stats">
+      <div class="stik-stat">
+        <div class="stik-stat-label">Ingresos</div>
+        <div id="stikIngMes" class="stik-stat-value positive">$0</div>
+      </div>
+      <div class="stik-stat">
+        <div class="stik-stat-label">Gastos</div>
+        <div id="stikGasMes" class="stik-stat-value negative">$0</div>
+      </div>
+      <div class="stik-stat">
+        <div class="stik-stat-label">Neto</div>
+        <div id="stikNetoMes" class="stik-stat-value">$0</div>
+      </div>
+      <div class="stik-stat">
+        <div class="stik-stat-label">Margen</div>
+        <div id="stikMargen" class="stik-stat-value">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💰 Cuentas por Cobrar</div>
+    <div id="cuentasCobrar"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💸 Cuentas por Pagar</div>
+    <div id="cuentasPagar"></div>
+  </div>
+</div>
+
+<!-- Screen: Pendientes -->
+<div id="screenPendientes" class="screen">
+  <div class="card">
+    <div class="card-title">⏳ Movimientos Pendientes</div>
+    <div id="listaPendientes"></div>
+  </div>
+</div>
+
+<!-- Screen: Historial -->
+<div id="screenHistorial" class="screen">
+  <div class="card">
+    <div class="card-title">📜 Historial Completo</div>
+    <div id="historialCompleto" class="timeline"></div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="abrirModal()">+</button>
+
+<!-- Navigation -->
+<div class="nav-bottom">
+  <button class="nav-item active" onclick="cambiarScreen('Inicio', this)">
+    <div class="nav-icon">🏠</div>
+    <span>Inicio</span>
+  </button>
+  <button class="nav-item" onclick="cambiarScreen('Pilares', this)">
+    <div class="nav-icon">📊</div>
+    <span>Pilares</span>
+  </button>
+  <button class="nav-item" onclick="cambiarScreen('Negocio', this)">
+    <div class="nav-icon">💼</div>
+    <span>Negocio</span>
+  </button>
+  <button class="nav-item" onclick="cambiarScreen('Pendientes', this)">
+    <div class="nav-icon">⏳</div>
+    <span>Pendientes</span>
+  </button>
+  <button class="nav-item" onclick="cambiarScreen('Historial', this)">
+    <div class="nav-icon">📜</div>
+    <span>Historial</span>
+  </button>
+</div>
+
+<!-- Modal Nuevo Movimiento -->
+<div id="modal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Nuevo Movimiento</h2>
-      <button class="close-btn" onclick="closeTxModal()">&times;</button>
+      <div class="modal-title">Nuevo Movimiento</div>
+      <button class="modal-close" onclick="cerrarModal()">×</button>
+    </div>
+
+    <div class="tipo-selector">
+      <button class="tipo-btn active" onclick="seleccionarTipo('gasto', this)">💸 Gasto</button>
+      <button class="tipo-btn" onclick="seleccionarTipo('ingreso', this)">💰 Ingreso</button>
     </div>
 
     <div class="form-group">
-      <div class="seg-control" id="typeSeg">
-        <div class="seg-btn active" data-type="expense" onclick="setType('expense')">Gasto</div>
-        <div class="seg-btn" data-type="income" onclick="setType('income')">Ingreso</div>
+      <label class="form-label">Monto</label>
+      <input type="number" id="inputMonto" class="form-input" placeholder="0.00" step="0.01" oninput="actualizarPreview()">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Método</label>
+      <div class="metodo-selector">
+        <button class="metodo-btn active" onclick="seleccionarMetodo('Efectivo', this)">💵 Efectivo</button>
+        <button class="metodo-btn" onclick="seleccionarMetodo('Transferencia', this)">💳 Transferencia</button>
       </div>
     </div>
 
     <div class="form-group">
-      <label>Monto</label>
-      <input type="number" id="mAmount" class="form-control" placeholder="0.00" step="0.01" inputmode="decimal" oninput="updateDistributionPreview()">
-    </div>
-
-    <div class="form-group">
-      <label>Método</label>
-      <select id="mMethod" class="form-control">
-        <option value="Efectivo">💵 Efectivo</option>
-        <option value="Transferencia">💳 Transferencia</option>
+      <label class="form-label">Fuente</label>
+      <select id="inputFuente" class="form-select" onchange="actualizarPreview()">
+        <option value="Propina">Propina</option>
+        <option value="Stikmania">Stikmania</option>
+        <option value="Salario">Salario</option>
+        <option value="Otro">Otro</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label id="sourceLabel">Fuente</label>
-      <select id="mSource" class="form-control" onchange="updateForm()"></select>
-    </div>
-
-    <div class="form-group" id="mPillarGroup">
-      <label>Pilar</label>
-      <select id="mPillar" class="form-control"></select>
-    </div>
-
-    <div class="business-note hidden" id="stikExpenseNote">
-      Gasto de negocio: afecta Stikmania y el saldo total, pero no los pilares personales.
-    </div>
-
-    <div class="preview-note" id="distributionPreview"></div>
-
-    <div class="form-group">
-      <label>Nota</label>
-      <input type="text" id="mClient" class="form-control" placeholder="Opcional">
+      <label class="form-label">Pilar</label>
+      <select id="inputPilar" class="form-select" onchange="actualizarPreview()">
+        <option value="Gastos Fijos">Gastos Fijos</option>
+        <option value="Ocio">Ocio</option>
+        <option value="Inversión">Inversión</option>
+        <option value="Ahorro">Ahorro</option>
+      </select>
     </div>
 
     <div class="form-group">
-      <label>Estado</label>
-      <select id="mStatus" class="form-control" onchange="toggleDueDate()">
+      <label class="form-label">Nota (opcional)</label>
+      <input type="text" id="inputNota" class="form-input" placeholder="Descripción del movimiento">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Estado</label>
+      <select id="inputEstado" class="form-select">
         <option value="Pagado">Pagado</option>
         <option value="Pendiente">Pendiente</option>
       </select>
     </div>
 
-    <div class="form-group hidden" id="dueDateGroup">
-      <label>Fecha de vencimiento</label>
-      <input type="date" id="mDueDate" class="form-control">
+    <div id="previewImpact" class="preview-impact" style="display:none;">
+      <div class="preview-title">Impacto en Pilares</div>
+      <div id="previewContent"></div>
     </div>
 
-    <button class="btn-full btn-primary" onclick="saveTx()">Guardar</button>
+    <button class="btn-save" onclick="guardarMovimiento()">Guardar Movimiento</button>
   </div>
 </div>
 
-<!-- MODAL SETTINGS -->
-<div class="modal" id="settingsModal">
-  <div class="modal-content" id="settingsContent"></div>
-</div>
-
 <script>
-  const PILLARS = ['Fijos', 'Ocio', 'Inversión', 'Ahorro'];
-  const INCOME_SOURCES = ['Salario', 'Propina', 'Otro', 'Stikmania'];
-  const EXPENSE_SOURCES = ['Personal', 'Stikmania'];
+// Estado global
+let movs = JSON.parse(localStorage.getItem('movs') || '[]');
+let cicloPropinas = JSON.parse(localStorage.getItem('cicloPropinas') || '[]');
+let tipoActual = 'gasto';
+let metodoActual = 'Efectivo';
 
-  const DISTRIBUTIONS = {
-    Salario: [['Fijos', 0.50], ['Ocio', 0.30], ['Ahorro', 0.20]],
-    Stikmania: [['Inversión', 0.50], ['Fijos', 0.30], ['Ahorro', 0.20]],
-    Otro: [['Ahorro', 1.00]]
+// Navegación
+function cambiarScreen(nombre, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen' + nombre).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Modal
+function abrirModal() {
+  document.getElementById('modal').classList.add('active');
+}
+
+function cerrarModal() {
+  document.getElementById('modal').classList.remove('active');
+  resetForm();
+}
+
+function seleccionarTipo(tipo, btn) {
+  tipoActual = tipo;
+  document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  actualizarPreview();
+}
+
+function seleccionarMetodo(metodo, btn) {
+  metodoActual = metodo;
+  document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function resetForm() {
+  document.getElementById('inputMonto').value = '';
+  document.getElementById('inputNota').value = '';
+  document.getElementById('previewImpact').style.display = 'none';
+}
+
+// Preview de impacto
+function actualizarPreview() {
+  const monto = parseFloat(document.getElementById('inputMonto').value) || 0;
+  const fuente = document.getElementById('inputFuente').value;
+  const pilar = document.getElementById('inputPilar').value;
+  
+  if (monto <= 0) {
+    document.getElementById('previewImpact').style.display = 'none';
+    return;
+  }
+
+  let distribucion = {};
+  
+  if (tipoActual === 'ingreso') {
+    if (fuente === 'Salario') {
+      distribucion = { 'Gastos Fijos': monto * 0.5, 'Ocio': monto * 0.3, 'Ahorro': monto * 0.2 };
+    } else if (fuente === 'Stikmania') {
+      distribucion = { 'Inversión': monto * 0.5, 'Gastos Fijos': monto * 0.3, 'Ahorro': monto * 0.2 };
+    } else {
+      distribucion = { 'Ahorro': monto };
+    }
+  } else {
+    distribucion = { [pilar]: -monto };
+  }
+
+  let html = '';
+  for (let [pil, val] of Object.entries(distribucion)) {
+    const color = val > 0 ? '#2e7d32' : '#c62828';
+    const sign = val > 0 ? '+' : '';
+    html += `<div class="preview-item"><span class="preview-label">${pil}</span><span class="preview-value" style="color:${color}">${sign}$${val.toFixed(2)}</span></div>`;
+  }
+
+  document.getElementById('previewContent').innerHTML = html;
+  document.getElementById('previewImpact').style.display = 'block';
+}
+
+// Guardar movimiento
+function guardarMovimiento() {
+  const monto = parseFloat(document.getElementById('inputMonto').value);
+  const fuente = document.getElementById('inputFuente').value;
+  const pilar = document.getElementById('inputPilar').value;
+  const nota = document.getElementById('inputNota').value;
+  const estado = document.getElementById('inputEstado').value;
+
+  if (!monto || monto <= 0) {
+    alert('Ingresa un monto válido');
+    return;
+  }
+
+  const mov = {
+    id: Date.now(),
+    fecha: new Date().toISOString(),
+    tipo: tipoActual,
+    monto,
+    metodo: metodoActual,
+    fuente,
+    pilar,
+    nota,
+    estado
   };
 
-  let db = JSON.parse(localStorage.getItem('fin_pro_v8')) || {
-    tx: [],
-    settings: { currency: 'MXN', budgets: {} },
-    propinaCycle: { ids: [] }
-  };
+  movs.unshift(mov);
+  localStorage.setItem('movs', JSON.stringify(movs));
+  
+  cerrarModal();
+  render();
+}
 
-  if (!db.settings) db.settings = { currency: 'MXN', budgets: {} };
-  if (!db.settings.budgets) db.settings.budgets = {};
-  if (!db.propinaCycle) db.propinaCycle = { ids: [] };
+// Ciclo de propinas
+function registrarPropina() {
+  const monto = parseFloat(prompt('Monto de la propina:'));
+  if (!monto || monto <= 0) return;
 
-  PILLARS.forEach(p => {
-    if (typeof db.settings.budgets[p] === 'undefined') db.settings.budgets[p] = 0;
+  cicloPropinas.push(monto);
+  localStorage.setItem('cicloPropinas', JSON.stringify(cicloPropinas));
+
+  if (cicloPropinas.length === 3) {
+    cerrarCiclo();
+  } else {
+    renderCiclo();
+  }
+}
+
+function cerrarCiclo() {
+  if (cicloPropinas.length < 3) {
+    alert('Necesitas 3 propinas para cerrar el ciclo');
+    return;
+  }
+
+  const sorted = [...cicloPropinas].sort((a, b) => b - a);
+  const mayor = sorted[0];
+  const intermedia = sorted[1];
+  const menor = sorted[2];
+
+  movs.unshift({
+    id: Date.now(),
+    fecha: new Date().toISOString(),
+    tipo: 'ingreso',
+    monto: mayor,
+    metodo: 'Efectivo',
+    fuente: 'Propina',
+    pilar: 'Gastos Fijos',
+    nota: 'Ciclo propina - Mayor',
+    estado: 'Pagado'
   });
 
-  let currentType = 'expense';
-
-  const fmt = n => {
-    const curr = db.settings.currency || 'MXN';
-    const symbol = { MXN: '$', USD: '$', EUR: '€' }[curr] || '$';
-    return symbol + (n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
-  const round2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
-  const save = () => localStorage.setItem('fin_pro_v8', JSON.stringify(db));
-
-  function distributeAmount(amount, rules) {
-    const alloc = {};
-    let sum = 0;
-
-    rules.forEach(([pillar, pct]) => {
-      const val = round2(amount * pct);
-      alloc[pillar] = val;
-      sum = round2(sum + val);
-    });
-
-    const diff = round2(amount - sum);
-    if (diff !== 0 && rules.length) {
-      const first = rules[0][0];
-      alloc[first] = round2((alloc[first] || 0) + diff);
-    }
-
-    return alloc;
-  }
-
-  function sanitizeCycle() {
-    db.propinaCycle.ids = db.propinaCycle.ids.filter(id =>
-      db.tx.some(t => t.id === id && t.source === 'Propina' && !t.allocations)
-    );
-  }
-
-  function switchTab(id) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    document.querySelectorAll('.tab, .nav-item').forEach(el => {
-      el.classList.toggle('active', el.dataset.tab === id);
-    });
-  }
-
-  function setType(type) {
-    currentType = type;
-    document.querySelectorAll('#typeSeg .seg-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.type === type);
-    });
-    updateForm();
-  }
-
-  function updateForm() {
-    const sourceSel = document.getElementById('mSource');
-    const pillarGroup = document.getElementById('mPillarGroup');
-    const stikExpenseNote = document.getElementById('stikExpenseNote');
-    const sourceLabel = document.getElementById('sourceLabel');
-
-    const sources = currentType === 'income' ? INCOME_SOURCES : EXPENSE_SOURCES;
-    const currentSource = sourceSel.value;
-
-    sourceSel.innerHTML = sources.map(s => `<option value="${s}">${s}</option>`).join('');
-
-    if (sources.includes(currentSource)) sourceSel.value = currentSource;
-    else sourceSel.value = sources[0];
-
-    if (currentType === 'income') {
-      sourceLabel.innerText = 'Fuente';
-      pillarGroup.classList.add('hidden');
-      stikExpenseNote.classList.add('hidden');
-    } else {
-      sourceLabel.innerText = 'Fuente del gasto';
-      if (sourceSel.value === 'Stikmania') {
-        pillarGroup.classList.add('hidden');
-        stikExpenseNote.classList.remove('hidden');
-      } else {
-        pillarGroup.classList.remove('hidden');
-        stikExpenseNote.classList.add('hidden');
-      }
-    }
-
-    updateDistributionPreview();
-  }
-
-  function updateDistributionPreview() {
-    const amount = parseFloat(document.getElementById('mAmount').value) || 0;
-    const source = document.getElementById('mSource').value;
-    const el = document.getElementById('distributionPreview');
-
-    if (currentType === 'income') {
-      if (source === 'Propina') {
-        el.innerHTML = 'Propina: se asignará al cerrar el ciclo de 3.<br>Mayor → Fijos · Intermedia → Ocio · Menor → Inversión.';
-        return;
-      }
-
-      const rules = DISTRIBUTIONS[source] || DISTRIBUTIONS.Otro;
-      const alloc = distributeAmount(amount, rules);
-      el.innerHTML = 'Distribución automática:<br>' + Object.entries(alloc)
-        .map(([p, v]) => `${p}: <strong>${fmt(v)}</strong>`)
-        .join(' · ');
-    } else {
-      if (source === 'Stikmania') {
-        el.innerHTML = 'Gasto Stikmania: se resta del saldo total y se analiza en la negocio. No toca pilares personales.';
-      } else {
-        el.innerHTML = 'Gasto personal: selecciona el pilar de destino.';
-      }
-    }
-  }
-
-  function openTxModal() {
-    updateForm();
-    document.getElementById('txModal').classList.add('active');
-  }
-
-  function closeTxModal() {
-    document.getElementById('txModal').classList.remove('active');
-    document.getElementById('mAmount').value = '';
-    document.getElementById('mClient').value = '';
-    document.getElementById('mDueDate').value = '';
-    document.getElementById('mStatus').value = 'Pagado';
-    document.getElementById('dueDateGroup').classList.add('hidden');
-
-    currentType = 'expense';
-    document.querySelectorAll('#typeSeg .seg-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.type === 'expense');
-    });
-    updateForm();
-  }
-
-  function toggleDueDate() {
-    const status = document.getElementById('mStatus').value;
-    document.getElementById('dueDateGroup').classList.toggle('hidden', status === 'Pagado');
-  }
-
-  function saveTx() {
-    const amount = parseFloat(document.getElementById('mAmount').value);
-    if (!amount || amount <= 0) return alert('Monto inválido');
-
-    const source = document.getElementById('mSource').value;
-    const status = document.getElementById('mStatus').value;
-
-    if (currentType === 'income' && source === 'Propina') {
-      if ((db.propinaCycle.ids || []).length >= 3) {
-        return alert('El ciclo de propinas ya tiene 3 registros. Ciérralo o bórralo antes de registrar otra propina.');
-      }
-    }
-
-    let pillar = null;
-    if (currentType === 'expense' && source !== 'Stikmania') {
-      pillar = document.getElementById('mPillar').value;
-    }
-
-    let allocations = null;
-    if (currentType === 'income' && source !== 'Propina') {
-      const rules = DISTRIBUTIONS[source] || DISTRIBUTIONS.Otro;
-      allocations = distributeAmount(amount, rules);
-    }
-
-    const tx = {
-      id: Date.now(),
-      date: new Date().toISOString().split('T')[0],
-      type: currentType,
-      amount,
-      method: document.getElementById('mMethod').value,
-      source,
-      pillar,
-      client: document.getElementById('mClient').value,
-      status,
-      dueDate: status === 'Pendiente' ? document.getElementById('mDueDate').value : null,
-      allocations
-    };
-
-    db.tx.push(tx);
-
-    if (currentType === 'income' && source === 'Propina') {
-      db.propinaCycle.ids.push(tx.id);
-    }
-
-    save();
-    render();
-    closeTxModal();
-  }
-
-  function deleteTx(id) {
-    if (!confirm('¿Eliminar movimiento?')) return;
-    db.tx = db.tx.filter(t => t.id !== id);
-    db.propinaCycle.ids = db.propinaCycle.ids.filter(x => x !== id);
-    save();
-    render();
-  }
-
-  function markAsPaid(id) {
-    const tx = db.tx.find(t => t.id === id);
-    if (!tx) return;
-    tx.status = 'Pagado';
-    tx.dueDate = null;
-    save();
-    render();
-  }
-
-  function closePropinaCycle() {
-    const txs = db.propinaCycle.ids
-      .map(id => db.tx.find(t => t.id === id))
-      .filter(t => t && t.source === 'Propina' && !t.allocations);
-
-    if (txs.length !== 3) {
-      return alert('El ciclo de propinas debe tener exactamente 3 propinas.');
-    }
-
-    const sorted = [...txs].sort((a, b) => b.amount - a.amount || a.id - b.id);
-    const assign = ['Fijos', 'Ocio', 'Inversión'];
-
-    sorted.forEach((t, i) => {
-      t.allocations = { [assign[i]]: t.amount };
-      t.propinaPillar = assign[i];
-    });
-
-    db.propinaCycle.ids = [];
-    save();
-    render();
-    alert('Ciclo de propinas cerrado y asignado.');
-  }
-
-  function resetPropinaCycle() {
-    if (!db.propinaCycle.ids.length) return;
-    if (!confirm('Esto borrará las propinas del ciclo actual. ¿Continuar?')) return;
-
-    db.tx = db.tx.filter(t => !db.propinaCycle.ids.includes(t.id));
-    db.propinaCycle.ids = [];
-    save();
-    render();
-  }
-
-  function render() {
-    sanitizeCycle();
-
-    let cash = 0, bank = 0;
-    let monthIncome = 0, monthAllocated = 0;
-    let totalCxc = 0, totalCxp = 0;
-    let stikIncMonth = 0, stikExpMonth = 0, stikIncAll = 0, stikExpAll = 0;
-
-    const now = new Date();
-    const curMonth = now.getMonth();
-    const curYear = now.getFullYear();
-
-    const pillarCapital = PILLARS.reduce((acc, p) => { acc[p] = 0; return acc; }, {});
-    const pillarAllocMonth = PILLARS.reduce((acc, p) => { acc[p] = 0; return acc; }, {});
-    const pillarSpendMonth = PILLARS.reduce((acc, p) => { acc[p] = 0; return acc; }, {});
-
-    const pendingCxc = [];
-    const pendingCxp = [];
-
-    db.tx.forEach(t => {
-      const d = new Date(t.date);
-      const isMonth = d.getMonth() === curMonth && d.getFullYear() === curYear;
-      const isIncome = t.type === 'income';
-
-      if (t.status === 'Pagado') {
-        const val = isIncome ? t.amount : -t.amount;
-        if (t.method === 'Efectivo') cash += val;
-        else bank += val;
-
-        if (isIncome) {
-          if (isMonth) monthIncome += t.amount;
-
-          if (t.allocations) {
-            Object.entries(t.allocations).forEach(([p, v]) => {
-              pillarCapital[p] = round2(pillarCapital[p] + v);
-              if (isMonth) {
-                pillarAllocMonth[p] = round2(pillarAllocMonth[p] + v);
-                monthAllocated = round2(monthAllocated + v);
-              }
-            });
-          }
-        } else {
-          if (t.pillar) {
-            pillarCapital[t.pillar] = round2(pillarCapital[t.pillar] - t.amount);
-            if (isMonth) pillarSpendMonth[t.pillar] = round2(pillarSpendMonth[t.pillar] + t.amount);
-          }
-        }
-      }
-
-      if (t.source === 'Stikmania' && t.status === 'Pagado') {
-        if (isIncome) {
-          stikIncAll += t.amount;
-          if (isMonth) stikIncMonth += t.amount;
-        } else {
-          stikExpAll += t.amount;
-          if (isMonth) stikExpMonth += t.amount;
-        }
-      }
-
-      if (t.status === 'Pendiente') {
-        if (isIncome) {
-          totalCxc += t.amount;
-          pendingCxc.push(t);
-        } else {
-          totalCxp += t.amount;
-          pendingCxp.push(t);
-        }
-      }
-    });
-
-    document.getElementById('totalBal').innerText = fmt(cash + bank);
-    document.getElementById('cashBal').innerText = fmt(cash);
-    document.getElementById('bankBal').innerText = fmt(bank);
-
-    document.getElementById('monthIncome').innerText = fmt(monthIncome);
-    document.getElementById('monthAllocated').innerText = fmt(monthAllocated);
-    const unassigned = round2(monthIncome - monthAllocated);
-    const unassignedEl = document.getElementById('unassigned');
-    unassignedEl.innerText = fmt(unassigned);
-    unassignedEl.style.color = unassigned === 0 ? 'var(--success)' : 'var(--warn)';
-
-    // Propinas
-    const cycleTx = db.propinaCycle.ids
-      .map(id => db.tx.find(t => t.id === id))
-      .filter(Boolean);
-
-    document.getElementById('propinaCount').innerText = `${cycleTx.length}/3`;
-    const propinaList = document.getElementById('propinaList');
-    propinaList.innerHTML = cycleTx.length
-      ? ''
-      : '<div style="color:var(--muted); padding:0.5rem 0;">Registra 3 propinas para cerrar el ciclo.</div>';
-
-    cycleTx.forEach(t => {
-      propinaList.innerHTML += `
-        <div class="tx-item">
-          <div class="tx-left">
-            <div class="tx-icon ${t.status === 'Pendiente' ? 'pending' : 'inc'}">💰</div>
-            <div>
-              <div class="tx-cat">Propina</div>
-              <div class="tx-date">${t.date} • ${t.method} ${t.status === 'Pendiente' ? '• PENDIENTE' : ''}</div>
-            </div>
-          </div>
-          <div style="text-align:right;">
-            <div class="tx-amount inc">${fmt(t.amount)}</div>
-            <button onclick="deleteTx(${t.id})" style="background:none; border:none; color:var(--muted); font-size:0.7rem; cursor:pointer;">Eliminar</button>
-          </div>
-        </div>
-      `;
-    });
-
-    document.getElementById('btnClosePropina').disabled = cycleTx.length !== 3;
-
-    // Pilares
-    const pillarsList = document.getElementById('pillarsList');
-    pillarsList.innerHTML = '';
-
-    PILLARS.forEach(p => {
-      const capital = pillarCapital[p];
-      const allocated = pillarAllocMonth[p];
-      const spent = pillarSpendMonth[p];
-      const budget = db.settings.budgets[p] || 0;
-
-      const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
-      const color = pct >= 100 ? 'var(--danger)' : pct >= 80 ? 'var(--warn)' : 'var(--success)';
-
-      pillarsList.innerHTML += `
-        <div class="card">
-          <div class="budget-row">
-            <div class="budget-info">
-              <div class="budget-name">${p}</div>
-              <div class="budget-nums">
-                Asignado mes: ${fmt(allocated)} · Gastado mes: ${fmt(spent)}
-              </div>
-            </div>
-            <div style="font-weight:800; color:${capital < 0 ? 'var(--danger)' : 'var(--success)'}">
-              ${fmt(capital)}
-            </div>
-          </div>
-          ${budget > 0 ? `<div class="progress"><div class="progress-bar" style="width:${pct}%; background:${color}"></div></div>` : ''}
-        </div>
-      `;
-    });
-
-    // Stikmania
-    document.getElementById('stikIncMonth').innerText = fmt(stikIncMonth);
-    document.getElementById('stikExpMonth').innerText = fmt(stikExpMonth);
-    const stikNetMonth = stikIncMonth - stikExpMonth;
-    const stikNetMonthEl = document.getElementById('stikNetMonth');
-    stikNetMonthEl.innerText = fmt(stikNetMonth);
-    stikNetMonthEl.style.color = stikNetMonth >= 0 ? 'var(--success)' : 'var(--danger)';
-
-    document.getElementById('stikIncAll').innerText = fmt(stikIncAll);
-    document.getElementById('stikExpAll').innerText = fmt(stikExpAll);
-    const stikNetAll = stikIncAll - stikExpAll;
-    const stikNetAllEl = document.getElementById('stikNetAll');
-    stikNetAllEl.innerText = fmt(stikNetAll);
-    stikNetAllEl.style.color = stikNetAll >= 0 ? 'var(--success)' : 'var(--danger)';
-
-    const stikList = document.getElementById('stikList');
-    const stikTx = db.tx.filter(t => t.source === 'Stikmania').sort((a, b) => b.id - a.id).slice(0, 50);
-    stikList.innerHTML = stikTx.length ? '' : '<div style="color:var(--muted); text-align:center; padding:1rem;">Sin movimientos de Stikmania</div>';
-
-    stikTx.forEach(t => {
-      const isInc = t.type === 'income';
-      const isPending = t.status === 'Pendiente';
-      const icon = isPending ? '⏳' : (isInc ? '↓' : '↑');
-      const cls = isPending ? 'pending' : (isInc ? 'inc' : 'exp');
-
-      stikList.innerHTML += `
-        <div class="tx-item">
-          <div class="tx-left">
-            <div class="tx-icon ${cls}">${icon}</div>
-            <div>
-              <div class="tx-cat">${isInc ? 'Ingreso' : 'Gasto'} • Stikmania</div>
-              <div class="tx-date">${t.date} • ${t.method} ${t.client ? '• ' + t.client : ''} ${isPending ? '• PENDIENTE' : ''}</div>
-            </div>
-          </div>
-          <div style="text-align:right;">
-            <div class="tx-amount ${cls}">${isInc ? '+' : '-'}${fmt(t.amount)}</div>
-            <button onclick="deleteTx(${t.id})" style="background:none; border:none; color:var(--muted); font-size:0.7rem; cursor:pointer;">Eliminar</button>
-          </div>
-        </div>
-      `;
-    });
-
-    // Pendientes
-    document.getElementById('totalCxc').innerText = fmt(totalCxc);
-    document.getElementById('totalCxp').innerText = fmt(totalCxp);
-
-    const cxcList = document.getElementById('cxcList');
-    cxcList.innerHTML = pendingCxc.length ? '' : '<div style="color:var(--muted); text-align:center; padding:1rem;">Sin cuentas por cobrar</div>';
-
-    pendingCxc.forEach(t => {
-      const daysLeft = t.dueDate ? Math.ceil((new Date(t.dueDate) - now) / (1000 * 60 * 60 * 24)) : null;
-      const alertClass = daysLeft !== null ? (daysLeft < 0 ? 'alert-overdue' : daysLeft <= 3 ? 'alert-soon' : '') : '';
-      const alertText = daysLeft !== null ? (daysLeft < 0 ? 'VENCIDO' : daysLeft <= 3 ? `${daysLeft}d` : '') : '';
-
-      cxcList.innerHTML += `
-        <div class="tx-item">
-          <div class="tx-left">
-            <div class="tx-icon pending">⏳</div>
-            <div>
-              <div class="tx-cat">${t.client || t.source}<span class="alert-badge ${alertClass}">${alertText}</span></div>
-              <div class="tx-date">${t.date} ${t.dueDate ? '• Vence: ' + t.dueDate : ''}</div>
-            </div>
-          </div>
-          <div style="text-align:right;">
-            <div class="tx-amount" style="color:var(--warn)">${fmt(t.amount)}</div>
-            <button onclick="markAsPaid(${t.id})" style="background:var(--success); border:none; color:white; padding:0.25rem 0.5rem; border-radius:6px; font-size:0.7rem; cursor:pointer; margin-top:0.25rem;">Pagado</button>
-          </div>
-        </div>
-      `;
-    });
-
-    const cxpList = document.getElementById('cxpList');
-    cxpList.innerHTML = pendingCxp.length ? '' : '<div style="color:var(--muted); text-align:center; padding:1rem;">Sin cuentas por pagar</div>';
-
-    pendingCxp.forEach(t => {
-      const daysLeft = t.dueDate ? Math.ceil((new Date(t.dueDate) - now) / (1000 * 60 * 60 * 24)) : null;
-      const alertClass = daysLeft !== null ? (daysLeft < 0 ? 'alert-overdue' : daysLeft <= 3 ? 'alert-soon' : '') : '';
-      const alertText = daysLeft !== null ? (daysLeft < 0 ? 'VENCIDO' : daysLeft <= 3 ? `${daysLeft}d` : '') : '';
-      const title = t.client || (t.source === 'Stikmania' ? 'Stikmania' : t.pillar);
-
-      cxpList.innerHTML += `
-        <div class="tx-item">
-          <div class="tx-left">
-            <div class="tx-icon pending">⏳</div>
-            <div>
-              <div class="tx-cat">${title}<span class="alert-badge ${alertClass}">${alertText}</span></div>
-              <div class="tx-date">${t.date} ${t.dueDate ? '• Vence: ' + t.dueDate : ''}</div>
-            </div>
-          </div>
-          <div style="text-align:right;">
-            <div class="tx-amount" style="color:var(--danger)">${fmt(t.amount)}</div>
-            <button onclick="markAsPaid(${t.id})" style="background:var(--success); border:none; color:white; padding:0.25rem 0.5rem; border-radius:6px; font-size:0.7rem; cursor:pointer; margin-top:0.25rem;">Pagado</button>
-          </div>
-        </div>
-      `;
-    });
-
-    // Historial
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = '';
-    const sorted = [...db.tx].sort((a, b) => b.id - a.id).slice(0, 100);
-
-    sorted.forEach(t => {
-      const isInc = t.type === 'income';
-      const isPending = t.status === 'Pendiente';
-      const icon = isPending ? '⏳' : (isInc ? '↓' : '↑');
-      const cls = isPending ? 'pending' : (isInc ? 'inc' : 'exp');
-
-      let title = '';
-      if (isInc) title = t.source;
-      else title = t.source === 'Stikmania' ? 'Stikmania' : t.pillar;
-
-      let subtitle = `${t.date} • ${t.method}`;
-      if (t.client) subtitle += ` • ${t.client}`;
-      if (isInc && t.source === 'Propina' && t.propinaPillar) subtitle += ` • Asignado: ${t.propinaPillar}`;
-      if (isPending) subtitle += ' • PENDIENTE';
-
-      historyList.innerHTML += `
-        <div class="tx-item">
-          <div class="tx-left">
-            <div class="tx-icon ${cls}">${icon}</div>
-            <div>
-              <div class="tx-cat">${title}</div>
-              <div class="tx-date">${subtitle}</div>
-            </div>
-          </div>
-          <div style="text-align:right;">
-            <div class="tx-amount ${cls}">${isInc ? '+' : '-'}${fmt(t.amount)}</div>
-            <button onclick="deleteTx(${t.id})" style="background:none; border:none; color:var(--muted); font-size:0.7rem; cursor:pointer;">Eliminar</button>
-          </div>
-        </div>
-      `;
-    });
-  }
-
-  function openSettings() {
-    let html = `
-      <div class="modal-header">
-        <h2>Configuración</h2>
-        <button class="close-btn" onclick="closeSettings()">&times;</button>
-      </div>
-      <h3 style="margin-bottom:1rem;">Límites mensuales por pilar</h3>
-    `;
-
-    PILLARS.forEach((p, i) => {
-      html += `
-        <div class="form-group">
-          <label>${p}</label>
-          <input type="number" class="form-control" id="set_budget_${i}" value="${db.settings.budgets[p] || 0}">
-        </div>
-      `;
-    });
-
-    html += `
-      <h3 style="margin:1.5rem 0 1rem;">Moneda</h3>
-      <div class="form-group">
-        <label>Moneda base</label>
-        <select class="form-control" id="set_currency">
-          <option value="MXN" ${db.settings.currency === 'MXN' ? 'selected' : ''}>MXN</option>
-          <option value="USD" ${db.settings.currency === 'USD' ? 'selected' : ''}>USD</option>
-          <option value="EUR" ${db.settings.currency === 'EUR' ? 'selected' : ''}>EUR</option>
-        </select>
-      </div>
-      <button class="btn-full btn-primary" onclick="saveSettings()">Guardar</button>
-    `;
-
-    document.getElementById('settingsContent').innerHTML = html;
-    document.getElementById('settingsModal').classList.add('active');
-  }
-
-  function closeSettings() {
-    document.getElementById('settingsModal').classList.remove('active');
-  }
-
-  function saveSettings() {
-    PILLARS.forEach((p, i) => {
-      db.settings.budgets[p] = parseFloat(document.getElementById(`set_budget_${i}`).value) || 0;
-    });
-    db.settings.currency = document.getElementById('set_currency').value;
-    save();
-    closeSettings();
-    render();
-  }
-
-  function generateSyncLink() {
-    const data = btoa(encodeURIComponent(JSON.stringify(db)));
-    const url = window.location.href.split('?')[0] + '?sync=' + encodeURIComponent(data);
-
-    const temp = document.createElement('textarea');
-    temp.value = url;
-    document.body.appendChild(temp);
-    temp.select();
-    document.execCommand('copy');
-    document.body.removeChild(temp);
-
-    alert('Enlace copiado. Ábrelo en otro dispositivo para sincronizar.');
-  }
-
-  function exportData() {
-    const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `backup_finanzas_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-  }
-
-  function importData(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try {
-        db = JSON.parse(ev.target.result);
-        if (!db.tx) db.tx = [];
-        if (!db.settings) db.settings = { currency: 'MXN', budgets: {} };
-        if (!db.settings.budgets) db.settings.budgets = {};
-        if (!db.propinaCycle) db.propinaCycle = { ids: [] };
-
-        PILLARS.forEach(p => {
-          if (typeof db.settings.budgets[p] === 'undefined') db.settings.budgets[p] = 0;
-        });
-
-        save();
-        render();
-        alert('Datos importados correctamente.');
-      } catch (err) {
-        alert('Error al importar.');
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  function checkSyncParam() {
-    const params = new URLSearchParams(window.location.search);
-    const syncData = params.get('sync');
-    if (!syncData) return;
-
-    if (confirm('Se detectaron datos de sincronización. ¿Restaurar?')) {
-      try {
-        db = JSON.parse(decodeURIComponent(atob(decodeURIComponent(syncData))));
-
-        if (!db.tx) db.tx = [];
-        if (!db.settings) db.settings = { currency: 'MXN', budgets: {} };
-        if (!db.settings.budgets) db.settings.budgets = {};
-        if (!db.propinaCycle) db.propinaCycle = { ids: [] };
-
-        PILLARS.forEach(p => {
-          if (typeof db.settings.budgets[p] === 'undefined') db.settings.budgets[p] = 0;
-        });
-
-        save();
-        render();
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } catch (err) {
-        alert('Error al sincronizar.');
-      }
-    }
-  }
-
-  // INIT
-  document.getElementById('mPillar').innerHTML = PILLARS.map(p => `<option value="${p}">${p}</option>`).join('');
-  sanitizeCycle();
-  checkSyncParam();
+  movs.unshift({
+    id: Date.now() + 1,
+    fecha: new Date().toISOString(),
+    tipo: 'ingreso',
+    monto: intermedia,
+    metodo: 'Efectivo',
+    fuente: 'Propina',
+    pilar: 'Ocio',
+    nota: 'Ciclo propina - Intermedia',
+    estado: 'Pagado'
+  });
+
+  movs.unshift({
+    id: Date.now() + 2,
+    fecha: new Date().toISOString(),
+    tipo: 'ingreso',
+    monto: menor,
+    metodo: 'Efectivo',
+    fuente: 'Propina',
+    pilar: 'Inversión',
+    nota: 'Ciclo propina - Menor',
+    estado: 'Pagado'
+  });
+
+  localStorage.setItem('movs', JSON.stringify(movs));
+  cicloPropinas = [];
+  localStorage.setItem('cicloPropinas', JSON.stringify(cicloPropinas));
+  
   render();
+}
+
+function renderCiclo() {
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('cicloDot' + i);
+    if (i <= cicloPropinas.length) {
+      dot.classList.add('active');
+      dot.textContent = '$' + cicloPropinas[i-1];
+    } else {
+      dot.classList.remove('active');
+      dot.textContent = i;
+    }
+  }
+}
+
+// Cálculos
+function calc() {
+  let t = 0, ef = 0, tr = 0;
+  let fijos = 0, ocio = 0, inv = 0, ahorro = 0;
+  let stikIng = 0, stikGas = 0;
+
+  movs.forEach(m => {
+    if (m.estado !== 'Pagado') return;
+
+    if (m.tipo === 'ingreso') {
+      t += m.monto;
+      m.metodo === 'Efectivo' ? ef += m.monto : tr += m.monto;
+      
+      if (m.fuente === 'Salario') {
+        fijos += m.monto * 0.5;
+        ocio += m.monto * 0.3;
+        ahorro += m.monto * 0.2;
+      } else if (m.fuente === 'Stikmania') {
+        inv += m.monto * 0.5;
+        fijos += m.monto * 0.3;
+        ahorro += m.monto * 0.2;
+      } else {
+        ahorro += m.monto;
+      }
+
+      if (m.fuente === 'Stikmania') stikIng += m.monto;
+    } else {
+      t -= m.monto;
+      m.metodo === 'Efectivo' ? ef -= m.monto : tr -= m.monto;
+      
+      if (m.fuente === 'Stikmania') {
+        stikGas += m.monto;
+      } else {
+        if (m.pilar === 'Gastos Fijos') fijos -= m.monto;
+        if (m.pilar === 'Ocio') ocio -= m.monto;
+        if (m.pilar === 'Inversión') inv -= m.monto;
+        if (m.pilar === 'Ahorro') ahorro -= m.monto;
+      }
+    }
+  });
+
+  return { t, ef, tr, fijos, ocio, inv, ahorro, stikIng, stikGas };
+}
+
+// Render
+function fmt(n) {
+  return '$' + n.toFixed(2);
+}
+
+function render() {
+  const s = calc();
+
+  // Saldo
+  document.getElementById('saldoTotal').textContent = fmt(s.t);
+  document.getElementById('efectivoTotal').textContent = fmt(s.ef);
+  document.getElementById('transferenciaTotal').textContent = fmt(s.tr);
+
+  // Pilares
+  const total = Math.max(s.fijos + s.ocio + s.inv + s.ahorro, 0);
+  const pilares = [
+    ['Fijos', s.fijos],
+    ['Ocio', s.ocio],
+    ['Inv', s.inv],
+    ['Ahorro', s.ahorro]
+  ];
+
+  pilares.forEach(([k, v]) => {
+    document.getElementById('p' + k).textContent = fmt(v);
+    document.getElementById('p' + k + '2').textContent = fmt(v);
+    const pct = total > 0 ? (v / total) * 100 : 0;
+    document.getElementById('p' + k + 'Pct').textContent = pct.toFixed(1) + '%';
+    document.getElementById('p' + k + 'Pct2').textContent = pct.toFixed(1) + '%';
+    document.getElementById('bar' + k).style.width = Math.min(100, pct) + '%';
+  });
+
+  // Timeline reciente
+  const recientes = movs.slice(0, 5);
+  document.getElementById('timelineReciente').innerHTML = recientes.length > 0 ? 
+    recientes.map(m => renderTimelineItem(m)).join('') :
+    '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No hay movimientos aún</div></div>';
+
+  // Historial completo
+  document.getElementById('historialCompleto').innerHTML = movs.length > 0 ?
+    movs.map(m => renderTimelineItem(m)).join('') :
+    '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No hay movimientos aún</div></div>';
+
+  // Stikmania
+  document.getElementById('stikIngMes').textContent = fmt(s.stikIng);
+  document.getElementById('stikGasMes').textContent = fmt(s.stikGas);
+  const neto = s.stikIng - s.stikGas;
+  document.getElementById('stikNetoMes').textContent = fmt(neto);
+  document.getElementById('stikNetoMes').className = 'stik-stat-value ' + (neto >= 0 ? 'positive' : 'negative');
+  const margen = s.stikIng > 0 ? (neto / s.stikIng) * 100 : 0;
+  document.getElementById('stikMargen').textContent = margen.toFixed(1) + '%';
+
+  // Pendientes
+  const pendientes = movs.filter(m => m.estado === 'Pendiente');
+  document.getElementById('listaPendientes').innerHTML = pendientes.length > 0 ?
+    pendientes.map(m => `
+      <div class="pendiente-item">
+        <div class="pendiente-header">
+          <div class="pendiente-title">${m.fuente} - ${m.pilar}</div>
+          <div class="pendiente-amount">${fmt(m.monto)}</div>
+        </div>
+        <div class="pendiente-meta">${m.nota || 'Sin nota'} · ${new Date(m.fecha).toLocaleDateString()}</div>
+        <div class="pendiente-actions">
+          <button class="pendiente-btn mark-paid" onclick="marcarPagado(${m.id})">✓ Marcar Pagado</button>
+          <button class="pendiente-btn delete" onclick="eliminarMov(${m.id})">🗑️</button>
+        </div>
+      </div>
+    `).join('') :
+    '<div class="empty-state"><div class="empty-icon">✓</div><div class="empty-text">No hay pendientes</div></div>';
+
+  // Ciclo
+  renderCiclo();
+}
+
+function renderTimelineItem(m) {
+  const icon = m.tipo === 'ingreso' ? '💰' : '💸';
+  const iconClass = m.tipo === 'ingreso' ? 'ingreso' : 'gasto';
+  const amountClass = m.tipo === 'ingreso' ? 'ingreso' : 'gasto';
+  const sign = m.tipo === 'ingreso' ? '+' : '-';
+  
+  return `
+    <div class="timeline-item">
+      <div class="timeline-icon ${iconClass}">${icon}</div>
+      <div class="timeline-content">
+        <div class="timeline-title">${m.fuente} ${m.estado === 'Pendiente' ? '⏳' : ''}</div>
+        <div class="timeline-meta">${m.pilar} · ${m.metodo} · ${new Date(m.fecha).toLocaleDateString()}</div>
+      </div>
+      <div class="timeline-amount ${amountClass}">${sign}${fmt(m.monto)}</div>
+    </div>
+  `;
+}
+
+function marcarPagado(id) {
+  const mov = movs.find(m => m.id === id);
+  if (mov) {
+    mov.estado = 'Pagado';
+    localStorage.setItem('movs', JSON.stringify(movs));
+    render();
+  }
+}
+
+function eliminarMov(id) {
+  if (!confirm('¿Eliminar este movimiento?')) return;
+  movs = movs.filter(m => m.id !== id);
+  localStorage.setItem('movs', JSON.stringify(movs));
+  render();
+}
+
+// Inicializar
+render();
 </script>
+
 </body>
 </html>
