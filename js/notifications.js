@@ -1,90 +1,84 @@
+/**
+ * notifications.js — Notificaciones locales (Notification API)
+ * Versión corregida: el init NO bloquea el arranque de la app
+ */
+
 import { NOTIFICATION_CONFIG } from './config.js';
 
 class NotificationManager {
   constructor() {
-    this.permission = Notification.permission;
-    this.init();
+    this.permission = ('Notification' in window) ? Notification.permission : 'denied';
+    this._pedidoEnCurso = false;
   }
 
+  /**
+   * Init no bloqueante:
+   * - Si ya hay permiso, no hace nada
+   * - Si es la primera vez, pide permiso en el primer click del usuario
+   *   (mejor UX y cumple políticas de navegadores)
+   */
   async init() {
-    if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.ready;
-      
-      // Suscribirse a push notifications (opcional, requiere backend)
-      // Por ahora usamos notificaciones locales
+    if (!('Notification' in window)) {
+      console.warn('🔕 Notificaciones no soportadas en este navegador');
+      return;
     }
 
-    if (this.permission !== 'granted') {
-      await this.requestPermission();
-    }
-  }
-
-  async requestPermission() {
-    if ('Notification' in window) {
-      this.permission = await Notification.requestPermission();
+    if (this.permission === 'default' && !this._pedidoEnCurso) {
+      const pedir = async () => {
+        if (this._pedidoEnCurso) return;
+        this._pedidoEnCurso = true;
+        try {
+          this.permission = await Notification.requestPermission();
+        } catch (err) {
+          console.warn('No se pudo pedir permiso de notificaciones:', err);
+        }
+      };
+      // Se pide con la primera interacción del usuario (no bloquea el boot)
+      window.addEventListener('click', pedir, { once: true });
     }
   }
 
   show(title, options = {}) {
-    if (this.permission !== 'granted') return;
-
-    const notification = new Notification(title, {
-      icon: '/logo.svg',
-      badge: '/logo.svg',
-      ...options,
-      timestamp: Date.now()
-    });
-
-    // Auto-close after 5s
-    setTimeout(() => notification.close(), 5000);
-
-    return notification;
+    if (!('Notification' in window) || this.permission !== 'granted') return null;
+    try {
+      const n = new Notification(title, {
+        icon: 'logo.svg',
+        badge: 'logo.svg',
+        ...options,
+        timestamp: Date.now()
+      });
+      setTimeout(() => n.close(), 5000);
+      return n;
+    } catch (err) {
+      console.warn('Error mostrando notificación:', err);
+      return null;
+    }
   }
 
   showIngreso(monto, fuente) {
-    this.show('💰 Ingreso Registrado', {
-      body: `$${monto} de ${fuente}`,
-      tag: 'ingreso',
-      icon: '💰'
-    });
+    this.show('💰 Ingreso Registrado', { body: `$${monto} de ${fuente}`, tag: 'ingreso' });
   }
 
   showGasto(monto, categoria) {
-    this.show('💸 Gasto Registrado', {
-      body: `$${monto} en ${categoria}`,
-      tag: 'gasto',
-      icon: '💸'
-    });
+    this.show('💸 Gasto Registrado', { body: `$${monto} en ${categoria}`, tag: 'gasto' });
   }
 
   showAlert(message, priority = 'normal') {
-    const urgency = priority === 'alta' ? 'high' : 'normal';
     this.show('⚠️ Alerta', {
       body: message,
       tag: 'alert',
-      requireInteraction: priority === 'alta',
-      urgency
+      requireInteraction: priority === 'alta'
     });
   }
 
   showSync(status, message) {
-    const icons = {
-      online: '',
-      offline: '🔴',
-      sync: '🔄',
-      error: '❌'
-    };
-
-    this.show('Sincronización', {
-      body: message,
-      tag: 'sync',
-      icon: icons[status] || '🔄'
-    });
+    const icons = { online: '🟢', offline: '🔴', sync: '🔄', error: '❌' };
+    this.show('Sincronización', { body: message, tag: 'sync', icon: icons[status] || '🔄' });
   }
 
   showWilsonAlert(material, cantidad, puntoReorden) {
     this.show('📦 Stock Bajo - Modelo Wilson', {
-      body: `${material}: Stock actual ${cantidad} ≤ Punto de reorden ${puntoReorden}. Es momento de pedir.`,
+      body: `${material}: stock ${cantidad} ≤ punto de reorden ${puntoReorden}. Es momento de pedir.`,
       tag: 'wilson-reorder',
       requireInteraction: true
     });
@@ -92,7 +86,7 @@ class NotificationManager {
 
   showCicloPropinas(monto, asignacion) {
     this.show('🔄 Ciclo de Propinas Cerrado', {
-      body: `Propina de $${monto} asignada a ${asignacion}`,
+      body: `Propina mayor de $${monto} asignada a ${asignacion}`,
       tag: 'ciclo-propinas'
     });
   }
@@ -100,15 +94,6 @@ class NotificationManager {
 
 export const notifier = new NotificationManager();
 
-// Helpers
-export function notifySync(status, message) {
-  notifier.showSync(status, message);
-}
-
-export function notifyAlert(message, priority = 'normal') {
-  notifier.showAlert(message, priority);
-}
-
-export function notifyWilson(material, cantidad, puntoReorden) {
-  notifier.showWilsonAlert(material, cantidad, puntoReorden);
-}
+export function notifySync(status, message) { notifier.showSync(status, message); }
+export function notifyAlert(message, priority = 'normal') { notifier.showAlert(message, priority); }
+export function notifyWilson(material, cantidad, puntoReorden) { notifier.showWilsonAlert(material, cantidad, puntoReorden); }

@@ -20,10 +20,16 @@
       min-height: 100vh; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 12px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #666; font-size: 0.95rem;
+      color: #666; font-size: 0.95rem; padding: 20px; text-align: center;
     }
     .boot-screen .boot-logo { font-size: 3rem; animation: bootPulse 1.2s infinite; }
     @keyframes bootPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+    #bootError {
+      max-width: 500px; background: #f8d7da; color: #721c24;
+      padding: 12px; border-radius: 10px; font-size: 0.8rem;
+      font-family: monospace; white-space: pre-wrap; display: none;
+    }
+    #bootError.visible { display: block; }
   </style>
 </head>
 <body>
@@ -31,6 +37,7 @@
     <div class="boot-screen">
       <div class="boot-logo">💰</div>
       <div>Iniciando Control Financiero...</div>
+      <div id="bootError"></div>
     </div>
   </div>
 
@@ -39,6 +46,36 @@
       Esta aplicación requiere JavaScript habilitado.
     </div>
   </noscript>
+
+  <!-- Diagnóstico de arranque: muestra errores de módulos en pantalla -->
+  <script>
+    (function () {
+      var box = document.getElementById('bootError');
+      function pintar(msg) {
+        if (!box) return;
+        box.textContent = msg;
+        box.classList.add('visible');
+      }
+      // Errores de scripts/módulos que no cargan (404, CORS, sintaxis)
+      window.addEventListener('error', function (e) {
+        if (e.target && e.target.tagName === 'SCRIPT') {
+          pintar('❌ No se pudo cargar el módulo:\n' + (e.target.src || 'desconocido') +
+                 '\n\nVerifica que el archivo exista y que estés usando un servidor HTTP (no file://).');
+        } else if (e.message) {
+          pintar('❌ ' + e.message + '\n' + (e.filename || '') + ':' + (e.lineno || ''));
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) {
+        pintar('❌ Promesa rechazada: ' + ((e.reason && e.reason.message) || e.reason));
+      });
+      // Si en 10s no arrancó, algo está colgado
+      setTimeout(function () {
+        if (box && !box.textContent && document.getElementById('app').querySelector('.boot-screen')) {
+          pintar('⏳ La app no terminó de iniciar en 10s.\nAbre la consola (F12) para ver el detalle.');
+        }
+      }, 10000);
+    })();
+  </script>
 
   <script type="module" src="js/app.js"></script>
 </body>
