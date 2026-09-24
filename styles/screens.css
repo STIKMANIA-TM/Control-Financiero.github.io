@@ -1,0 +1,106 @@
+/* ========== KPIs ========== */
+.kpi-grid { display: grid; gap: 10px; }
+.kpi-2 { grid-template-columns: repeat(2, 1fr); }
+.kpi-3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-4 { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 768px) { .kpi-4 { grid-template-columns: repeat(4, 1fr); } }
+.kpi-card { background: #fafafa; border-radius: 12px; padding: 12px; text-align: center; }
+.kpi-label { font-size: 0.7rem; text-transform: uppercase; color: #666; font-weight: 600; margin-bottom: 4px; }
+.kpi-value { font-size: 1.15rem; font-weight: 700; }
+.kpi-value.ok { color: #2e7d32; }
+.kpi-value.bad { color: #c62828; }
+.kpi-value.warn { color: #f57f17; }
+
+/* ========== Textos ========== */
+.muted { font-size: 0.8rem; color: #666; margin-bottom: 10px; }
+.rule-text { font-size: 0.75rem; color: #666; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 12px; line-height: 1.7; }
+
+/* ========== Chips y badges ========== */
+.chip { background: #e3f2fd; color: #1976d2; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+.badge { font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 10px; white-space: nowrap; }
+.badge-ok { background: #d4edda; color: #155724; }
+.badge-pronto { background: #fff3cd; color: #856404; }
+.badge-vencido { background: #f8d7da; color: #721c24; }
+.badge-sin { background: #e9ecef; color: #495057; }
+
+/* ========== Ciclo de propinas ========== */
+.cycle-dots { display: flex; gap: 10px; margin: 14px 0; }
+.cycle-dot { flex: 1; height: 52px; border-radius: 12px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #999; }
+.cycle-dot.active { background: #fff9c4; color: #f57f17; border: 2px solid #f57f17; }
+.cycle-form { display: flex; gap: 8px; }
+.cycle-form .form-input { flex: 1; }
+.cycle-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* ========== Botones pequeños ========== */
+.btn-small { padding: 10px 14px; border: none; border-radius: 10px; background: #eceff1; color: #37474f; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+.btn-small:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-small.btn-primary { background: #1976d2; color: white; }
+.btn-small.btn-success { background: #2e7d32; color: white; flex: 1; }
+.btn-small.btn-danger-soft { background: #ffebee; color: #c62828; }
+.backup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ========== Banner import ========== */
+.banner-import { background: #e3f2fd; border: 2px solid #1976d2; border-radius: 12px; padding: 14px; margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; }
+.banner-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* ========== Timeline ========== */
+.timeline-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; align-items: center; }
+.timeline-item:last-child { border-bottom: none; }
+.timeline-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+.timeline-icon.ingreso { background: #e8f5e9; }
+.timeline-icon.gasto { background: #ffebee; }
+.timeline-content { flex: 1; min-width: 0; }
+.timeline-title { font-size: 0.9rem; font-weight: 600; }
+.timeline-meta { font-size: 0.72rem; color: #666; }
+.timeline-dist { font-size: 0.72rem; color: #1976d2; margin-top: 2px; }
+.timeline-amount { font-weight: 700; font-size: 0.95rem; white-space: nowrap; }
+.timeline-amount.ingreso { color: #2e7d32; }
+.timeline-amount.gasto { color: #c62828; }
+.timeline-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+/* ========== Pilares detalle ========== */
+.pilares-detail-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 768px) { .pilares-detail-grid { grid-template-columns: repeat(2, 1fr); } }
+.pilar-detail { background: #fafafa; border-radius: 12px; padding: 14px; }
+.pilar-detail-head { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; }
+.pilar-detail-pct { color: #1976d2; }
+.pilar-detail-valor { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+.pilar-bar { height: 6px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden; }
+.pilar-bar-fill { height: 100%; transition: width 0.3s; }
+.pilar-detail-flujo { display: flex; justify-content: space-between; font-size: 0.72rem; margin-top: 8px; }
+.pilar-detail-flujo .in { color: #2e7d32; }
+.pilar-detail-flujo .out { color: #c62828; }
+
+/* ========== Details / inventario ========== */
+.details-card { background: #fafafa; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+.details-card summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.inv-detail { margin-top: 12px; }
+.inv-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+.inv-row:last-of-type { border: none; }
+.inv-item.critico { border-left: 4px solid #c62828; }
+.inv-item.pedir { border-left: 4px solid #f57f17; }
+.inv-item.ok { border-left: 4px solid #2e7d32; }
+.inv-form { margin-top: 12px; }
+
+/* ========== Pendientes ========== */
+.pend-item { background: #fafafa; border-radius: 12px; padding: 14px; margin-bottom: 12px; border-left: 4px solid #ffc107; }
+.pend-item.vencido { border-left-color: #c62828; }
+.pend-head { display: flex; justify-content: space-between; gap: 10px; }
+.pend-title { font-weight: 600; font-size: 0.9rem; }
+.pend-meta { font-size: 0.72rem; color: #666; margin-top: 2px; }
+.pend-right { text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.pend-amount { font-weight: 700; }
+.pend-amount.ingreso { color: #2e7d32; }
+.pend-amount.gasto { color: #c62828; }
+.pend-actions { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+.pend-date { flex: 1; padding: 8px !important; font-size: 0.8rem !important; }
+
+/* ========== Filtros ========== */
+.filter-bar { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 768px) { .filter-bar { grid-template-columns: 1fr 1fr 1fr auto; } }
+
+/* ========== Estados vacíos y alertas ========== */
+.empty-state { text-align: center; padding: 24px 12px; color: #999; font-size: 0.85rem; }
+.empty-icon { font-size: 2.2rem; margin-bottom: 8px; }
+.alert { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px 14px; margin-top: 10px; font-size: 0.82rem; border-radius: 8px; }
+.alert.danger { background: #f8d7da; border-color: #dc3545; }
